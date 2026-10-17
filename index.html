@@ -31,19 +31,23 @@
   ::placeholder { color: var(--muted); opacity: 1; }
   .wrap { max-width: 1520px; margin: 0 auto; padding: 22px 40px 28px; display: flex; flex-direction: column; gap: 22px; }
   @media (max-width: 700px) { .wrap { padding: 16px 16px 24px; } }
-  .caps { font-size: 11px; letter-spacing: 2.5px; color: var(--muted); text-transform: uppercase; }
+  .caps { font-size: 11px; line-height: 16px; letter-spacing: 2.5px; color: var(--muted); text-transform: uppercase; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   select, input[type=text], input[type=search] { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
   select { width: 100%; }
-  .btn { border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 10px 16px; cursor: pointer; min-height: 42px; }
+  .btn { border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 10px 16px; line-height: 20px; cursor: pointer; min-height: 42px; }
   select { min-height: 42px; }
   .btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); font-weight: 500; }
   .btn.small { padding: 4px 10px; font-size: 12px; }
   .btn:disabled { opacity: .55; cursor: default; }
-  .link { background: transparent; border: 0; padding: 0; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .link { background: transparent; border: 0; padding: 0; font-size: 12px; line-height: 16px; color: var(--muted); cursor: pointer; }
   .link:hover { color: var(--ink); }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  .seg button { background: transparent; border: 0; padding: 9px 14px; cursor: pointer; }
+  .seg button { background: transparent; border: 0; padding: 9px 14px; line-height: 20px; cursor: pointer; }
+  /* survol : le même retour que le bouton du thème, sauf sur le bouton principal et le segment choisi */
+  .btn:not(.primary):not(:disabled):hover, .seg button:not([aria-pressed="true"]):not(:disabled):hover { background: var(--chip); }
+  input[type=checkbox] { margin: 0; }           /* la marge du navigateur décalait Miroir et « défaut » */
+  .thumb:empty { background: transparent; }     /* case vide : pas de carré clair en sombre */
   .seg button + button { border-left: 1px solid var(--line); }
   .seg button[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); }
   .seg button:disabled { opacity: .4; cursor: default; }
@@ -54,16 +58,40 @@
 
   /* en-tête */
   header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
-  header.top .brand { font-size: 11px; font-weight: 500; letter-spacing: 3.5px; color: var(--muted); margin-right: 12px; }
-  header.top select { width: auto; min-width: 280px; max-width: min(100%, 340px); }
+  header.top .brand { font-size: 11px; font-weight: 500; letter-spacing: 3.5px; color: var(--muted); margin-right: 12px; min-width: 82px; }
+  header.top .who { display: flex; gap: 8px; align-items: center; min-width: 0; }
+  header.top select { width: 340px; min-width: 0; max-width: 100%; }
   header.top .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+  @media (min-width: 701px) and (max-width: 1180px) {   /* l'en-tête reste sur une ligne : le menu des persos se resserre */
+    header.top select { width: 250px; }
+  }
+  @media (min-width: 701px) and (max-width: 1039px) {   /* tablette : deux rangs qui finissent au même bord droit */
+    header.top .who { flex: 1 1 auto; }
+    header.top .who select { flex: 1 1 250px; width: auto; max-width: none; }
+  }
+  /* menu Exporter : les exports moins courants, chacun avec ce qu'il produit */
+  .menuwrap { position: relative; display: flex; }
+  #exportBtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  #exportLbl { font-variant-numeric: tabular-nums; }
+  #exportBtn[aria-expanded="true"] { border-color: var(--ink); }
+  .menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; width: 235px; box-sizing: border-box; padding: 6px;   /* bord gauche = bord de la colonne */
+          background: var(--stage); border: 1px solid var(--ring); border-radius: 10px; display: flex; flex-direction: column; }
+  .menu[hidden] { display: none; }
+  .menu button { font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 9px 10px;
+                 text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+  .menu button:hover { background: var(--chip); }
+  .menu button:focus-visible { background: var(--chip); outline: 2px solid var(--ink); outline-offset: -2px; }
+  .menu button > span:first-child { line-height: 20px; }
+  .menu .sub { font-size: 12px; line-height: 18px; color: var(--muted); }
   .theme { width: 42px; height: 42px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink);
            padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .theme:hover { background: var(--chip); }
   @media (max-width: 700px) {
     header.top .brand { margin-right: auto; }
     .theme { width: 44px; height: 44px; }
-    header.top select { min-width: 0; width: 100%; max-width: none; }
+    header.top .who { width: 100%; }
+    header.top select { min-width: 0; width: auto; flex: 1 1 0; max-width: none; }
+    .menuwrap > .btn { flex: 1; }
     header.top .actions { width: 100%; margin-left: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     header.top .actions .primary { order: -1; grid-column: 1 / -1; }   /* l'export principal seul, puis les deux autres */
   }
@@ -75,8 +103,9 @@
   .stagebar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; color: var(--muted); font-size: 13px; }
   .stagebar .zoom { display: flex; align-items: center; gap: 8px; }
   .stagebar input[type=range] { width: 120px; accent-color: var(--ink); }
+  .stagebar #zoomv { min-width: 32px; text-align: right; font-variant-numeric: tabular-nums; }   /* le curseur ne bouge plus */
   #stagebox { flex: 1 1 0; min-height: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  #stagebox[data-fond="damier"] { background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 20px 20px; }
+  #stagebox[data-fond="damier"] { background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) center / 20px 20px; }
   #stagebox[data-fond="clair"] { background: #ffffff; } #stagebox[data-fond="sombre"] { background: #22201f; } #stagebox[data-fond="herbe"] { background: #7d9b47; }
   #stagebox.anim { cursor: pointer; }
   #stage { width: auto; height: auto; max-width: 100%; max-height: 100%; }   /* le perso tient toujours dans le cadre */
@@ -88,7 +117,7 @@
   @media (max-width: 1039px) {                  /* réglages sous l'aperçu */
     .layout { grid-template-columns: minmax(0, 1fr); }
     .stage { height: auto; }
-    #stagebox { flex: none; height: min(62vh, 640px); min-height: 320px; }
+    #stagebox { flex: none; height: min(62vh, 640px); height: round(down, min(62vh, 640px), 1px); min-height: 320px; }
   }
   @media (max-width: 560px) {                   /* téléphone : la pilule sur deux rangs nets */
     .pill { align-self: stretch; flex-direction: column; border-radius: 12px; }
@@ -96,7 +125,7 @@
     .pill #pose { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .pill .seg button { padding: 10px 0; white-space: nowrap; font-size: 13px; }
     .pill .seg + .seg { border-left: 0; border-top: 1px solid var(--line); }
-    #stagebox { height: min(48vh, 420px); min-height: 260px; }
+    #stagebox { height: min(48vh, 420px); height: round(down, min(48vh, 420px), 1px); min-height: 260px; }
   }
   aside.side > section { display: flex; flex-direction: column; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
   aside.side > section:first-child { padding-top: 0; }
@@ -115,103 +144,121 @@
   .color input[type=color]::-webkit-color-swatch { border: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); }
   .color input[type=color]::-moz-color-swatch { border: 0; border-radius: 50%; }
   .color input[type=color]:disabled { cursor: default; opacity: .55; }
-  .color .num { font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-top: 2px; }
-  .color input[type=text] { width: 100%; max-width: 104px; text-align: center; font-weight: 500; letter-spacing: .8px; padding: 4px 6px; text-transform: uppercase;
+  .color .num { font-size: 11px; line-height: 16px; letter-spacing: 2px; padding-left: 2px; color: var(--muted); margin-top: 2px; }   /* 2px : l'espacement après le dernier « I » */
+  .color input[type=text] { width: 100%; max-width: 104px; text-align: center; font-weight: 500; letter-spacing: .8px; padding: 4px 6px; line-height: 20px; text-transform: uppercase;
                             background: transparent; border-color: transparent; }
   .color input[type=text]:hover, .color input[type=text]:focus { border-color: var(--line); background: var(--panel); }
   .color input[type=text]:disabled { color: var(--muted); font-weight: 400; letter-spacing: 0; text-transform: none; }
-  .color .def { font-size: 12px; color: var(--muted); display: flex; gap: 5px; align-items: center; cursor: pointer; }
+  .color .def { font-size: 12px; line-height: 16px; color: var(--muted); display: flex; gap: 8px; align-items: center; cursor: pointer; }
 
   /* équipement : 4 tuiles */
   #equip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .slot { position: relative; padding: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-height: 66px; }
+  .slot { position: relative; padding: 10px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-height: 66px; }
   .slot:hover, .slot:focus-within { border-color: var(--ink); }
-  .slot .pick { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: center; width: 100%; background: transparent;
+  .slot .pick { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; background: transparent;
                 border: 0; padding: 0; text-align: left; cursor: pointer; }
   .slot .txt { display: flex; flex-direction: column; min-width: 0; }
   .slot .thumb { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: var(--thumb); border-radius: 6px; }
   .slot .thumb img { max-width: 42px; max-height: 42px; }
-  .slot .what { font-size: 12px; color: var(--muted); }
-  .slot .name { font-weight: 500; line-height: 1.25; padding-right: 14px; overflow-wrap: break-word; hyphens: auto; }
-  .slot .lvl { margin-top: 8px; display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
-  .slot .lvl select { width: auto; max-width: 100%; min-height: 0; padding: 3px 6px; font-size: 12px; }
+  .slot .what { font-size: 12px; line-height: 16px; color: var(--muted); padding-right: 20px; }   /* la croix est sur cette ligne */
+  .slot .name { font-weight: 500; line-height: 18px; overflow-wrap: break-word; hyphens: manual;   /* 2 lignes au plus, nom entier en title */
+                display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .slot .lvl { margin-top: 8px; display: flex; gap: 6px; align-items: center; font-size: 12px; line-height: 16px; color: var(--muted); }
+  .slot .lvl select { width: auto; max-width: 100%; min-height: 0; height: 24px; padding: 0 6px; font-size: 12px; }
   .slot [data-off] { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: transparent;
                      color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
   .slot [data-off]:hover { background: var(--chip); color: var(--ink); }
 
   /* vue, team */
   .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; color: var(--muted); font-size: 13px; }
-  .row label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
-  .fonds { display: flex; gap: 6px; align-items: center; }
+  .row label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .fonds { display: flex; gap: 8px; align-items: center; }
   .fonds button { width: 22px; height: 22px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; box-shadow: inset 0 0 0 1px var(--ring); }
-  .fonds button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--ring), 0 0 0 2px var(--bg), 0 0 0 3.5px var(--ink); }
+  .fonds button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--ring), 0 0 0 2px var(--bg), 0 0 0 3px var(--ink); }
+  .fonds button:focus-visible { outline-offset: 4px; }                         /* le focus ne ressemble pas au fond choisi */
   .fonds [data-v="damier"] { background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 10px 10px; }
   .fonds [data-v="clair"] { background: #ffffff; } .fonds [data-v="sombre"] { background: #22201f; } .fonds [data-v="herbe"] { background: #7d9b47; }
-  .teamrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .teamrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }   /* titre à la même distance du filet que les autres sections */
   .teamrow .t { display: flex; flex-direction: column; }
+  .teamrow .meta { line-height: 16px; }
 
   /* choix d'objet */
   #picker { position: fixed; inset: 0; background: var(--veil); display: none; z-index: 10; padding: 24px 16px; }
   #picker.open { display: flex; justify-content: center; }
-  #picker .box { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
-  #picker header { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  #picker header h2 { font-size: 15px; font-weight: 500; margin: 0; }
+  #picker .box { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
+  #picker header { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  #picker header h2 { font-size: 15px; line-height: 22px; font-weight: 500; margin: 0; }
   #picker header input { flex: 1; min-width: 160px; }
-  #picker .grid { overflow: auto; padding: 12px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  #pickerSearch, #pickerFilter, #pipZoom, #skinName { min-height: 42px; }   /* même hauteur que les boutons voisins */
+  #pickerCount { margin-right: auto; }          /* Rien et Fermer au bord droit, comme dans les autres fenêtres */
+  @media (max-width: 900px) { #picker header input { flex: 1 1 55%; } }
+  #picker .grid { overflow: auto; padding: 12px 14px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
   .card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; text-align: left; }
   .card:hover, .card[aria-current="true"] { border-color: var(--ink); }
   .card[aria-current="true"] { box-shadow: 0 0 0 1px var(--ink) inset; }
   .card .pic { height: 78px; display: flex; align-items: center; justify-content: center; background: var(--thumb); border-radius: 6px; }
   .card .pic img { max-width: 100%; max-height: 78px; }
-  .card .nm { font-size: 11.5px; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .card .id { font-size: 10.5px; color: var(--muted); }
+  .card .nm { font-size: 11.5px; line-height: 14px; height: 28px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }   /* 2 lignes réservées : le numéro au même y */
+  .card .id { font-size: 10.5px; line-height: 14px; color: var(--muted); }
   /* team */
   #teambox, #skinsbox, #cmpbox, #pipbox { position: fixed; inset: 0; background: var(--veil); display: none; z-index: 10; padding: 24px 16px; }
   #teambox.open, #skinsbox.open, #cmpbox.open, #pipbox.open { display: flex; justify-content: center; align-items: flex-start; }
-  #teambox .box, #skinsbox .box, #cmpbox .box, #pipbox .box { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
-  #teambox header, #skinsbox header, #cmpbox header, #pipbox header { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
-  #teambox header h2, #skinsbox header h2, #cmpbox header h2, #pipbox header h2 { font-size: 15px; font-weight: 500; margin: 0; flex: 1; }
+  #teambox .box, #skinsbox .box, #cmpbox .box, #pipbox .box { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
+  #teambox header, #skinsbox header, #cmpbox header, #pipbox header { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  #teambox header h2, #skinsbox header h2, #cmpbox header h2, #pipbox header h2 { font-size: 15px; line-height: 22px; font-weight: 500; margin: 0; flex: 1; }
   #teambox .body, #skinsbox .body, #cmpbox .body, #pipbox .body { overflow: auto; padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
   .members { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
-  .member { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
-  .member .fixed { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; color: var(--ink); background: var(--panel); }
+  .member { font-size: 12px; line-height: 17px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  .member .fixed { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; line-height: 22px; color: var(--ink); background: var(--panel);
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* 42 px comme les menus voisins */
+  .member select { text-overflow: ellipsis; }
+  #cmpbox .members { grid-template-columns: repeat(2, minmax(0, 260px)); justify-content: center; }   /* chaque menu au-dessus de sa carte */
+  @media (min-width: 1040px) { #teamMembers { grid-template-columns: repeat(4, minmax(0, 1fr)); } }   /* 8 persos : 4 + 4 */
   .mtiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
   #teamGrid .tcard { position: relative; }
   .tdel { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%;
           background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
   .tdel i { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); display: grid; place-items: center; }
   .tdel:hover, .tdel:focus-visible { color: var(--ink); }
+  .tdel:focus-visible { outline-offset: 0; }    /* l'anneau ne touche pas le bord de la carte */
   .tdel:hover i, .tdel:focus-visible i { border-color: var(--ink); }
-  .mtile { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 6px; align-items: center; padding: 4px 6px; min-height: 38px;
+  .mtile { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 6px; align-items: center; padding: 4px; min-height: 38px;
            border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; text-align: left; }
-  .mtile:hover { border-color: var(--ink); }
+  .mtile:hover, .mtile:focus-visible { border-color: var(--ink); }
   .mtile .thumb { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--thumb); border-radius: 4px; }
   .mtile .thumb img { max-width: 26px; max-height: 26px; }
   .mtile .txt { display: flex; flex-direction: column; min-width: 0; }
-  .mtile .what { font-size: 10.5px; color: var(--muted); }
-  .mtile .name { font-size: 11.5px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tcard .own { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
-  .tcard .acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .mtile .what { font-size: 10.5px; line-height: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mtile .name { font-size: 11.5px; line-height: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tcard .own { font-size: 11.5px; color: var(--muted); line-height: 15px; }
+  .tcard .acts { align-self: stretch; margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }   /* Mes skins : boutons alignés en bas */
+  .tcard [data-act="del"][data-sure] { border-color: var(--ink); }   /* suppression armée */
+  #teamGrid .tcard [data-open] { margin-top: auto; }   /* « Ouvrir ce perso » au même y dans une rangée */
+  .tsame:empty, .tgrid:empty { display: none; }
   .saverow { display: flex; flex-wrap: wrap; gap: 8px; }
   .saverow input { flex: 1 1 220px; }
   .tgrid.cmpgrid { grid-template-columns: repeat(2, minmax(0, 260px)); justify-content: center; }
   .cmpgrid .tcard .pic { height: 220px; } .cmpgrid .tcard .pic img { max-height: 220px; }
+  @media (max-width: 560px) { .cmpgrid .tcard .pic { height: auto; aspect-ratio: 7 / 8; } }   /* au téléphone : la zone à la taille de l'image */
   .head .links { display: flex; gap: 14px; }
   /* pipette */
   .pipwrap { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 14px; align-items: start; }
   @media (max-width: 760px) { .pipwrap { grid-template-columns: minmax(0, 1fr); } }
-  .pipimg { min-height: 320px; max-height: 64vh; overflow: auto; border: 1px dashed var(--line); border-radius: 10px; background: var(--panel);
+  .pipimg { min-height: 320px; max-height: 64vh; overflow: auto; border: 1px dashed var(--line); border-radius: 10px; background: var(--panel); padding: 8px;
             display: flex; align-items: safe center; justify-content: safe center; }
+  .pipimg:has(> canvas:not([hidden])) { height: max(320px, round(down, 64vh, 1px)); max-height: none; box-sizing: border-box; }   /* même cadre en Ajuster et en ×2 / ×4 */
   .pipimg.over { border-color: var(--ink); }
   .pipimg canvas { cursor: crosshair; image-rendering: pixelated; display: block; flex: none; }
   #pipbox [hidden] { display: none !important; }
   .pipempty { text-align: center; color: var(--muted); padding: 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
   .pipside { display: flex; flex-direction: column; gap: 10px; }
-  .piptarget { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 10px; width: 100%;
-               border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; text-align: left; }
+  #pipTargets { display: flex; flex-direction: column; gap: 6px; }
+  .piptarget { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 10px; width: 100%; min-height: 56px;
+               border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; text-align: left; line-height: 20px; }
+  .piptarget:hover { border-color: var(--ink); }
   .piptarget[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
   .piptarget i { width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
-  .piptarget .r { font-size: 12px; color: var(--muted); display: block; }
+  .piptarget .r { font-size: 12px; line-height: 16px; color: var(--muted); display: block; }
   .piptarget code, .piphover code { font-family: inherit; font-variant-numeric: tabular-nums; }
   #pipOther { align-self: flex-start; }
   #pipbox header { flex-wrap: wrap; }
@@ -219,16 +266,16 @@
   .piphover { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; min-height: 22px; }
   .piphover i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
   #picker { z-index: 11; }                      /* au-dessus de la fenêtre Team quand il choisit pour un de ses persos */
-  .tsame { font-size: 12px; color: var(--muted); margin: 0; }
+  .tsame { font-size: 12px; line-height: 17px; color: var(--muted); margin: 0; }
   .tsame b { color: var(--ink); font-weight: 500; }
   .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
   .tcard { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
   .tcard .pic { height: 150px; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
   .tcard .pic img { max-height: 150px; max-width: 100%; }
-  .tcard .nm { font-weight: 500; line-height: 1.2; overflow-wrap: anywhere; max-width: 100%; }
-  .tcard .cl { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; max-width: 100%; }
-  .tcols { display: flex; flex-direction: column; gap: 3px; }
-  .tcol { display: grid; grid-template-columns: 14px auto auto; gap: 6px; align-items: center; font-size: 12px; }
+  .tcard .nm { font-weight: 500; line-height: 17px; overflow-wrap: anywhere; max-width: 100%; }
+  .tcard .cl { font-size: 12px; line-height: 17px; color: var(--muted); overflow-wrap: anywhere; max-width: 100%; }
+  .tcols { display: grid; grid-template-columns: 14px auto auto; gap: 3px 6px; }   /* pastilles, libellés et codes en colonnes communes */
+  .tcol { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; font-size: 12px; line-height: 18px; text-align: left; }
   .tcol i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
   .tcol span { color: var(--muted); }
   .tcol code { font-family: inherit; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
@@ -238,11 +285,23 @@
     .fonds button { width: 44px; height: 44px; }
     .slot [data-off] { width: 44px; height: 44px; top: 0; right: 0; }
     .tdel { width: 44px; height: 44px; top: 0; right: 0; }
+    .member .fixed, .mtile { min-height: 44px; }
+    #teambox header { flex-wrap: wrap; }          /* titre sur toute la largeur, puis les boutons à droite */
+    #teambox header h2 { flex-basis: 100%; }
+    #teamPng { margin-left: auto; }
+    .seg:not(.pill .seg) { border: 0; outline: 1px solid var(--line); outline-offset: -1px; }   /* segment de 44 px, comme ses voisins */
+    .stagebar input[type=range] { height: 44px; margin-block: -14px; }   /* cible tactile sans changer la barre */
     #pipbox header h2 { flex-basis: 100%; }    /* le titre seul, puis taille, Annuler et Fermer sur une ligne */
     .slot .name { padding-right: 30px; }
     .slot .lvl select { min-height: 44px; }
-    #pickerSearch { min-height: 44px; }
+    #pickerSearch, #skinName { min-height: 44px; }
     .link, .row label, .color .def { min-height: 44px; display: flex; align-items: center; }
+    .head .link { margin: -14px -3px; padding: 0 3px; }   /* cible de 44 px qui ne pousse pas la mise en page */
+  }
+  @media (max-width: 560px) {                   /* téléphone : une tuile d'équipement par ligne, filtres sur une ligne */
+    #equip { grid-template-columns: minmax(0, 1fr); }
+    #pickerFilter { flex: 1 1 100%; display: grid; grid-auto-flow: column; }
+    #pickerFilter button { padding: 9px 6px; font-size: 13px; white-space: nowrap; }
   }
   /* ---------- ordinateur : pleine page (en dernier : ces règles l'emportent sur celles du dessus) */
   @media (min-width: 1040px) {                  /* ordinateur : une pleine page, sans défilement */
@@ -250,7 +309,10 @@
     .wrap { height: 100vh; height: 100dvh; padding-top: 20px; padding-bottom: 24px; gap: 20px; }
     .layout { flex: 1 1 0; min-height: 0; align-items: stretch; grid-template-rows: minmax(0, 1fr); }
     .stage { min-height: 0; }
-    aside.side { min-height: 0; overflow-y: auto; }   /* sur un écran très bas seulement, la colonne défile seule */
+    aside.side { min-height: 0; overflow-y: auto; margin-inline: -4px; padding-inline: 4px; }   /* 4 px : l'anneau de focus n'est pas rogné */
+    .stagebar { flex-wrap: nowrap; }            /* barre d'une ligne dans tous les modes : le cadre ne saute pas */
+    #status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .stagebar .zoom { flex: none; }
   }
   @media (min-width: 1040px) and (max-height: 880px) {   /* écran plus bas (1280x800, 1366x768) : tout resserré d'un cran */
     .wrap { padding-top: 14px; padding-bottom: 16px; gap: 14px; }
@@ -258,7 +320,7 @@
     aside.side > section:first-child { padding-top: 0; }
     .color { gap: 4px; }
     .color input[type=color] { width: 38px; height: 38px; }
-    .slot { min-height: 0; padding: 8px 10px; }
+    .slot { min-height: 0; padding: 8px; }
     .stage { padding: 14px 16px 16px; gap: 10px; }
   }
   @media (min-width: 1040px) and (max-height: 800px) {   /* 1366x768 : un cran de plus */
@@ -275,11 +337,21 @@
   <header class="top">
     <div class="brand">SKINATOR</div>
     <button class="theme" id="theme" aria-label="Passer en sombre"></button>
-    <label class="sr" for="perso">Mes persos</label>
-    <select id="perso"><option value="">Mes persos : reprendre classe, couleurs et équipement</option></select>
+    <label class="sr" for="perso">Mes persos et mes skins : reprendre classe, couleurs et équipement</label>
+    <div class="who">
+      <select id="perso"><option value="">Mes persos</option></select>
+      <button class="btn" id="skins">Mes skins</button>
+    </div>
     <div class="actions">
-      <button class="btn" id="gif">GIF animé</button>
-      <button class="btn" id="pnganim">PNG animations</button>
+      <button class="btn" id="share">Copier le lien</button>
+      <div class="menuwrap">
+        <button class="btn" id="exportBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu"><span id="exportLbl">Exporter</span><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="menu" id="exportMenu" role="menu" aria-label="Exporter" hidden>
+          <button role="menuitem" id="pnganim" tabindex="-1"><span>PNG animations</span><span class="sub">Les 7 vues sur une planche</span></button>
+          <button role="menuitem" id="gif" tabindex="-1"><span>GIF animé</span><span class="sub">Les 7 vues qui bougent, en boucle</span></button>
+          <button role="menuitem" id="svgdl" tabindex="-1"><span>SVG de la vue</span><span class="sub">La pose affichée, en vectoriel</span></button>
+        </div>
+      </div>
       <button class="btn primary" id="png">PNG 4 rotations</button>
     </div>
   </header>
@@ -301,7 +373,7 @@
 
     <aside class="side" aria-label="Réglages">
       <section>
-        <div class="head"><span class="caps">Perso</span><span class="links"><button class="link" id="skins">Mes skins</button><button class="link" id="share">Copier le lien</button></span></div>
+        <div class="head"><span class="caps">Perso</span></div>
         <div class="duo">
           <div><label class="sr" for="classe">Classe</label><select id="classe"></select></div>
           <div class="seg" id="sexe" role="group" aria-label="Sexe"><button data-v="0">Mâle</button><button data-v="1">Femelle</button></div>
@@ -325,7 +397,7 @@
       </section>
 
       <section>
-        <div class="head"><span class="caps">Vue</span><button class="link" id="svgdl">SVG de la vue</button></div>
+        <div class="head"><span class="caps">Vue</span></div>
         <div class="row">
           <label><input type="checkbox" id="miroir"> Miroir</label>
           <div class="fonds" id="fond" role="group" aria-label="Fond">
@@ -369,7 +441,7 @@
       <h2 id="pipTitle">Pipette</h2>
       <div class="seg" id="pipZoom" role="group" aria-label="Taille de la capture"><button data-v="0">Ajuster</button><button data-v="2">×2</button><button data-v="4">×4</button></div>
       <button class="btn small" id="pipUndo">Annuler</button>
-      <button class="btn small primary" id="pipClose">Fermer</button>
+      <button class="btn small" id="pipClose">Fermer</button>
     </header>
     <div class="body">
       <div class="pipwrap">
@@ -381,7 +453,7 @@
           </div>
         </div>
         <div class="pipside">
-          <div id="pipTargets" role="group" aria-label="Couleur à prendre" style="display: flex; flex-direction: column; gap: 6px"></div>
+          <div id="pipTargets" role="group" aria-label="Couleur à prendre"></div>
           <div class="piphover" id="pipHover" aria-live="polite"></div>
           <button class="btn small" id="pipOther" hidden>Autre image</button>
           <input type="file" id="pipFile" accept="image/*" hidden>
@@ -579,17 +651,17 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   let renderId = 0;
   async function render() {
     const id = ++renderId;
-    $('#status').textContent = 'Chargement…';
+    setStatus('Chargement…');
     syncUI();
     if (state.mode === 'anim') return player.show(id);
     player.stop();
     let r;
     try { r = await draw($('#stage'), state.pose, state.miroir, state.zoom); }
-    catch (e) { if (id === renderId) $('#status').textContent = e.message; return; }
+    catch (e) { if (id === renderId) setStatus(e.message); return; }
     if (id !== renderId) return;
     frame($('#stage'), union(FRAME, r), state.zoom);
     const cls = M.classes[state.classe].nom + (state.sexe ? ' femelle' : ' mâle');
-    $('#status').textContent = `${cls} · ${POSE_NAMES[state.pose]}${state.miroir ? ' · miroir' : ''}`;
+    setStatus(`${cls} · ${POSE_NAMES[state.pose]}${state.miroir ? ' · miroir' : ''}`);
   }
   function refreshFilters() {           // changer une couleur ne refait que les filtres
     const f = $('#stage .filters');
@@ -662,7 +734,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       const keys = Object.values(state.acc).filter(Boolean).map(a => a.cle);
       let lib;
       try { [lib] = await Promise.all([loadAnim(g), ...keys.map(loadAccAnim)]); }
-      catch (e) { if (id === renderId) $('#status').textContent = e.message; return; }
+      catch (e) { if (id === renderId) setStatus(e.message); return; }
       if (id !== renderId) return;
       this.svg = $('#stage');
       this.prepare(lib, keys);
@@ -670,7 +742,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       $('#stagebox').classList.add('anim');
       this.start(view);
       const cls = M.classes[state.classe].nom + (state.sexe ? ' femelle' : ' mâle');
-      $('#status').textContent = `${cls} · animée, vue ${state.vue + 1}/7 : ${view[2]} · clic sur le perso : vue suivante`;
+      setStatus(`${cls} · animée, vue ${state.vue + 1}/7 : ${view[2]} · clic sur le perso : vue suivante`);
       let last = performance.now(), acc = 0;
       const loop = (t) => {
         acc += Math.min(250, t - last); last = t;
@@ -831,6 +903,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     render();
   });
 
+  function setStatus(t) { const st = $('#status'); st.textContent = t; st.title = t; }   // coupé par « … » sur ordinateur : le texte entier en title
+
   // ---------- équipement
   function equipUI() {
     $('#equip').innerHTML = Object.entries(SLOT_NAMES).map(([n, what]) => {
@@ -839,7 +913,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
         `<option value="${v}"${v === a.niveau ? ' selected' : ''}>${v + 1}</option>`).join('')}</select></label>` : '';
       const nm = x ? esc(itemName(x)) : 'rien';
       return `<div class="slot" data-slot="${n}">
-        <button class="pick" data-pick="${n}" aria-label="Changer : ${what}, ${nm}"><span class="thumb">${x && x.vignette ? `<img src="svg/vignettes/${x.cle}.svg" alt="">` : ''}</span>
+        <button class="pick" data-pick="${n}" aria-label="Changer : ${what}, ${nm}"${x ? ` title="${nm}"` : ''}><span class="thumb">${x && x.vignette ? `<img src="svg/vignettes/${x.cle}.svg" alt="">` : ''}</span>
           <span class="txt"><span class="what">${what}</span><span class="name">${x ? nm : '—'}</span></span></button>${lvl}
         ${x ? `<button data-off="${n}" aria-label="Enlever : ${nm}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>` : ''}</div>`;
     }).join('');
@@ -863,8 +937,9 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     $('#picker').classList.add('open');
     if (target) $('#teambox').inert = true; else modal(true);
     fillPicker();
+    const g = $('#pickerGrid'); g.style.paddingRight = Math.max(0, 14 - (g.offsetWidth - g.clientWidth)) + 'px';
     const cur = $('#pickerGrid [aria-current="true"]');
-    $('#pickerGrid').scrollTop = 0; if (cur) cur.scrollIntoView({ block: 'center' });   // l'objet porté en vue
+    g.scrollTop = 0; if (cur) { cur.scrollIntoView({ block: 'center' }); g.scrollTop = Math.round(g.scrollTop); }   // l'objet porté en vue, sur un pixel entier
     $('#pickerSearch').focus();
   }
   function closePicker() {
@@ -1112,7 +1187,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
         <span class="thumb">${x && x.vignette ? `<img src="svg/vignettes/${x.cle}.svg" alt="">` : ''}</span>
         <span class="txt"><span class="what">${esc(what)}</span><span class="name">${esc(name)}</span></span></button>`;
     };
-    $('#teamMembers').innerHTML = `<div class="member"><span>Perso 1 · modèle</span><span class="fixed">${teamModel.nom ? esc(teamModel.nom) + ' · ' : ''}${clsName(teamModel.classe, teamModel.sexe)}</span></div>` +
+    const modele = (teamModel.nom ? esc(teamModel.nom) + ' · ' : '') + clsName(teamModel.classe, teamModel.sexe);
+    $('#teamMembers').innerHTML = `<div class="member"><span>Perso 1 · modèle</span><span class="fixed" title="${modele}">${modele}</span></div>` +
       Array.from({ length: TEAM_MAX - 1 }, (_, i) => {
         const e = entryOf(team[i]);
         return `<div class="member"><label for="tm${i}">Perso ${i + 2}</label><select id="tm${i}" data-m="${i}">${memberOptions(e && e.qui)}</select>
@@ -1243,11 +1319,13 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     });
   }
   function pipShow() {                          // la capture : entière dans la zone (agrandie par pas entiers si petite), ou ×2, ×4
-    $('#pipZoom').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === pipZoom)));
+    $('#pipZoom').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(+b.dataset.v === pipZoom)); b.disabled = !pipData; });
     const cv = $('#pipCanvas'); if (!pipData) return;
-    const box = $('#pipDrop'), fit = Math.min((box.clientWidth - 16) / cv.width, (Math.max(320, innerHeight * 0.64) - 16) / cv.height);
+    const box = $('#pipDrop'), H = Math.max(320, Math.floor(innerHeight * 0.64));   // 16 de cadre (8 + 8) et 2 de bordure
+    const fit = Math.min((box.clientWidth - 16) / cv.width, (H - 18) / cv.height);   // clientWidth : sans la bordure
     const k = pipZoom || (fit >= 1 ? Math.min(4, Math.floor(fit)) : fit);
-    cv.style.width = Math.round(cv.width * k) + 'px';
+    cv.style.width = Math.round(cv.width * k) + 'px'; cv.style.height = Math.round(cv.height * k) + 'px';
+    cv.style.imageRendering = k < 1 ? 'auto' : '';   // pixels nets quand on agrandit, lissés quand on réduit
   }
   async function pipLoad(file) {                // type vide (fichier sans extension) : on essaie quand même
     if (!file) return;
@@ -1349,7 +1427,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       const c = Math.floor(p.gfx / 10), sx = p.gfx % 10, cl = M.classes[c] ? clsName(c, sx) : 'gfx ' + p.gfx;
       return `<option value="${i}">${esc(p.nom)} · ${cl} · niv. ${p.niveau}</option>`;
     }).join('');
-    sel.innerHTML = `<option value="">Mes persos : reprendre classe, couleurs et équipement</option>` +
+    sel.innerHTML = `<option value="">Mes persos</option>` +
       (mine ? `<optgroup label="Mes persos">${mine}</optgroup>` : '') +
       (skins.length ? `<optgroup label="Mes skins">${skins.map(k => `<option value="s:${esc(k.id)}">${esc(k.nom)} · ${clsName(k.classe, k.sexe)}</option>`).join('')}</optgroup>` : '');
     sel.value = [...sel.options].some(o => o.value === v) ? v : '';
@@ -1475,7 +1553,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     el.addEventListener('click', (e) => { if (e.target === el && !el.downOnVeil) e.stopImmediatePropagation(); }, true);
   }
   $('#cmpPng').onclick = async () => {
-    const btn = $('#cmpPng'); btn.disabled = true; btn.textContent = 'Export…';
+    const btn = $('#cmpPng'); btn.style.minWidth = btn.offsetWidth + 'px'; btn.disabled = true; btn.textContent = 'Export…';
     try {
       const cards = cmpCards(), cv = await plancheGroupe(cards, state.pose), b = await new Promise(r => cv.toBlob(r, 'image/png'));
       const part = (v) => {                     // le nom en ASCII, coupé entre deux mots s'il est long
@@ -1924,40 +2002,58 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     apply: async (o) => { Object.assign(state, o); $('#perso').value = ''; equipUI(); await render(); },
   };
   $('#png').onclick = async () => {
-    const btn = $('#png'); btn.disabled = true; btn.textContent = 'Export…';
+    const btn = $('#png'); btn.style.minWidth = btn.offsetWidth + 'px'; btn.disabled = true; btn.textContent = 'Export…';
     try {
       const cv = await planche(10), b = await new Promise(r => cv.toBlob(r, 'image/png'));
       b ? download(b, fileBase() + '.png') : alert('Export PNG refusé par le navigateur : utilise le bouton SVG.');
     } catch (e) { alert('Export PNG impossible (' + e.message + ') : utilise le bouton SVG.'); }
-    finally { btn.disabled = false; btn.textContent = 'PNG 4 rotations'; }
+    finally { btn.disabled = false; btn.textContent = 'PNG 4 rotations'; btn.style.minWidth = ''; }
   };
-  $('#gif').onclick = async () => {
-    const btn = $('#gif'); btn.disabled = true; btn.textContent = 'GIF…';
+  // menu Exporter : s'ouvre au clic (focus sur le premier choix), flèches haut / bas, Échap ou clic ailleurs le ferme ;
+  // l'export choisi montre sa progression sur le bouton « Exporter »
+  const exportItems = () => [...$('#exportMenu').querySelectorAll('[role=menuitem]')];
+  function exportMenu(open, focusBtn = false) {
+    $('#exportMenu').hidden = !open; $('#exportBtn').setAttribute('aria-expanded', String(open));
+    if (open) exportItems()[0].focus(); else if (focusBtn) $('#exportBtn').focus();
+  }
+  $('#exportBtn').onclick = () => exportMenu($('#exportMenu').hidden);
+  $('#exportMenu').addEventListener('keydown', (e) => {
+    const items = exportItems(), i = items.indexOf(document.activeElement);
+    const go = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: items.length - 1 }[e.key];
+    if (go !== undefined) { e.preventDefault(); items[(go + items.length) % items.length].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); exportMenu(false, true); }
+    else if (e.key === 'Tab') exportMenu(false);
+  });
+  document.addEventListener('pointerdown', (e) => { if (!$('#exportMenu').hidden && !e.target.closest('.menuwrap')) exportMenu(false); });
+  async function exportFromMenu(label, run) {
+    exportMenu(false, true);
+    const btn = $('#exportBtn'), lbl = $('#exportLbl'); btn.style.minWidth = btn.offsetWidth + 'px'; btn.disabled = true; lbl.textContent = label;
+    try { await run((t) => { lbl.textContent = t; }); }
+    finally { btn.disabled = false; lbl.textContent = 'Exporter'; btn.style.minWidth = ''; if (document.activeElement === document.body) btn.focus(); }
+  }
+  $('#gif').onclick = () => exportFromMenu('GIF…', async (show) => {
     try {
-      const b = await gifAnim(5, (i, n, enc) => { btn.textContent = enc ? 'GIF : encodage…' : `GIF ${Math.round(90 * i / n)} %`; });
+      const b = await gifAnim(5, (i, n, enc) => show(enc ? 'GIF : encodage…' : `GIF ${Math.round(90 * i / n)} %`));
       download(b, fileBase() + '_animations.gif');
     } catch (e) { alert('Export GIF impossible (' + e.message + ').'); }
-    finally { btn.disabled = false; btn.textContent = 'GIF animé'; }
-  };
-  $('#pnganim').onclick = async () => {
-    const btn = $('#pnganim'); btn.disabled = true; btn.textContent = 'Export…';
+  });
+  $('#pnganim').onclick = () => exportFromMenu('Export…', async () => {
     try {
       const cv = await plancheAnim(6), b = await new Promise(r => cv.toBlob(r, 'image/png'));
       b ? download(b, fileBase() + '_animations.png') : alert('Export PNG refusé par le navigateur.');
     } catch (e) { alert('Export PNG impossible (' + e.message + ').'); }
-    finally { btn.disabled = false; btn.textContent = 'PNG animations'; }
-  };
+  });
   $('#teamPng').onclick = async () => {
-    const btn = $('#teamPng'); btn.disabled = true; btn.textContent = 'Export…';
+    const btn = $('#teamPng'); btn.style.minWidth = btn.offsetWidth + 'px'; btn.disabled = true; btn.textContent = 'Export…';
     try {
       const cv = await plancheGroupe(teamCards(), 'F', 10, 'perso'), b = await new Promise(r => cv.toBlob(r, 'image/png'));
       b ? download(b, `team_${teamMembers.length}-persos.png`) : alert('Export PNG refusé par le navigateur.');
     } catch (e) { alert('Export PNG impossible (' + e.message + ').'); }
-    finally { btn.disabled = false; btn.textContent = 'PNG de la team'; }
+    finally { btn.disabled = false; btn.textContent = 'PNG de la team'; btn.style.minWidth = ''; }
   };
   const POSE_FILE = { F: 'face', R: 'trois-quarts-face', S: 'profil', L: 'trois-quarts-dos', B: 'dos' };
-  $('#svgdl').onclick = () => download(new Blob([svgString($('#stage'))], { type: 'image/svg+xml' }),
-    `${fileBase()}_${state.mode === 'anim' ? 'anim-vue' + (state.vue + 1) : POSE_FILE[state.pose] + (state.miroir ? '-miroir' : '')}.svg`);
+  $('#svgdl').onclick = () => { exportMenu(false, true); download(new Blob([svgString($('#stage'))], { type: 'image/svg+xml' }),
+    `${fileBase()}_${state.mode === 'anim' ? 'anim-vue' + (state.vue + 1) : POSE_FILE[state.pose] + (state.miroir ? '-miroir' : '')}.svg`); };
 
   // ---------- lien de partage : le skin dans l'adresse de la page
   // index.html#c=9&s=0&k=f5e3ff,332d40,f5e3ff&a=16_41,81_57,18_31,82_106 (k : « - » = défaut ; a : emplacements 1 à 4,
@@ -1987,7 +2083,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     return true;
   }
   function flash(msg) {                         // un message bref dans la barre de l'aperçu
-    const st = $('#status'); st.textContent = msg; clearTimeout(flash.t); flash.t = setTimeout(() => render(), 4000);
+    setStatus(msg); clearTimeout(flash.t); flash.t = setTimeout(() => render(), 4000);
   }
   window.addEventListener('hashchange', () => {
     if (!new URLSearchParams(location.hash.slice(1)).has('c')) return;
