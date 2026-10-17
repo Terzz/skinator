@@ -266,6 +266,41 @@
   .piphover { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; min-height: 22px; }
   .piphover i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
   #picker { z-index: 11; }                      /* au-dessus de la fenêtre Team quand il choisit pour un de ses persos */
+  /* idées de couleurs : bouton de la colonne (comme un menu) et fenêtre sur le modèle du choix d'objet */
+  .ideesbtn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; text-align: left;
+              background: var(--panel); }
+  .ideesbtn svg { flex: none; color: var(--muted); }
+  #ideabox { position: fixed; inset: 0; background: var(--veil); display: none; z-index: 10; padding: 24px 16px; }
+  #ideabox.open { display: flex; justify-content: center; }
+  #ideabox .box { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
+  #ideabox header { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  #ideabox header h2 { font-size: 15px; line-height: 22px; font-weight: 500; margin: 0; }
+  #ideaSearch { flex: 1; min-width: 160px; min-height: 42px; }
+  #ideaGroup { width: auto; max-width: 280px; }
+  #ideaMode { min-height: 42px; }
+  #ideaCount { margin-right: auto; }
+  .ideagrid { overflow: auto; padding: 12px 14px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; align-content: start; flex: 1; }
+  .ideagrid .igroup { grid-column: 1 / -1; padding: 8px 0 0; }
+  .ideagrid .igroup:first-child { padding-top: 0; }
+  .ideagrid .igcount { letter-spacing: 0; margin-left: 6px; opacity: .7; }
+  .icard { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 6px; cursor: pointer; display: flex; flex-direction: column;
+           gap: 6px; text-align: left; color: var(--ink); }
+  .icard:hover, .icard[aria-current="true"] { border-color: var(--ink); }
+  .icard[aria-current="true"] { box-shadow: 0 0 0 1px var(--ink) inset; }
+  .icard .pic { height: 140px; display: flex; align-items: flex-end; justify-content: center; border-radius: 6px; }
+  .icard .pic img { max-width: 100%; max-height: 140px; }
+  .icard .nm { font-size: 12px; line-height: 16px; font-weight: 500; height: 32px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .icard .sw { display: flex; gap: 4px; }
+  .icard .sw i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
+  @media (max-width: 900px) { #ideaSearch { flex: 1 1 55%; } }
+  @media (max-width: 560px) {                   /* téléphone : titre et recherche, la série, puis le stuff et Fermer */
+    .ideagrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); } .icard .pic { height: 120px; } .icard .pic img { max-height: 120px; }
+    #ideaGroup { flex: 1 1 100%; max-width: none; }
+    #ideaCount { display: none; }               /* le nombre est déjà dans le menu des séries */
+    #ideaMode { flex: 1 1 auto; display: grid; grid-auto-flow: column; }
+    #ideaMode button { padding: 9px 8px; font-size: 13px; white-space: nowrap; }
+    #ideaClose { margin-left: auto; }
+  }
   .tsame { font-size: 12px; line-height: 17px; color: var(--muted); margin: 0; }
   .tsame b { color: var(--ink); font-weight: 500; }
   .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -294,7 +329,7 @@
     #pipbox header h2 { flex-basis: 100%; }    /* le titre seul, puis taille, Annuler et Fermer sur une ligne */
     .slot .name { padding-right: 30px; }
     .slot .lvl select { min-height: 44px; }
-    #pickerSearch, #skinName { min-height: 44px; }
+    #pickerSearch, #skinName, #ideaSearch { min-height: 44px; }
     .link, .row label, .color .def { min-height: 44px; display: flex; align-items: center; }
     .head .link { margin: -14px -3px; padding: 0 3px; }   /* cible de 44 px qui ne pousse pas la mise en page */
   }
@@ -379,7 +414,7 @@
           <div class="seg" id="sexe" role="group" aria-label="Sexe"><button data-v="0">Mâle</button><button data-v="1">Femelle</button></div>
         </div>
         <label class="sr" for="idee">Idées de skins</label>
-        <select id="idee"><option value="">Idées de skins : couleurs + Polykrome</option><option value="capture">Comme ta capture : Crâ, Voile, Coiffe Rusée, Le Famystique, Briseur</option></select>
+        <button class="btn ideesbtn" id="idee" aria-haspopup="dialog"><span>Idées de couleurs</span><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </section>
 
       <section id="colors">
@@ -460,6 +495,20 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="ideabox" role="dialog" aria-modal="true" aria-labelledby="ideaTitle">
+  <div class="box">
+    <header>
+      <h2 id="ideaTitle">Idées de couleurs</h2>
+      <input type="search" id="ideaSearch" placeholder="Nom ou code couleur" autocomplete="off" aria-label="Chercher une idée">
+      <select id="ideaGroup" aria-label="Série"></select>
+      <div class="seg" id="ideaMode" role="group" aria-label="Stuff des aperçus"><button data-v="mien">Sur mon stuff</button><button data-v="leur">Avec leur stuff</button></div>
+      <span class="meta" id="ideaCount"></span>
+      <button class="btn small" id="ideaClose">Fermer</button>
+    </header>
+    <div class="ideagrid" id="ideaGrid"></div>
   </div>
 </div>
 
@@ -1034,7 +1083,6 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     const v = e.target.value;
     if (v.startsWith('s:')) { const k = loadSkins().find(x => x.id === v.slice(2)); if (k) openSkin(k); return; }
     const p = PERSOS[v]; if (!p) return;
-    $('#idee').value = '';
     state.classe = Math.floor(p.gfx / 10); state.sexe = p.gfx % 10;
     p.couleurs.forEach((x, i) => state.colors[i + 1] = x == null ? null : parseInt(x.slice(1), 16));
     for (const n of Object.keys(SLOT_NAMES)) {
@@ -1043,17 +1091,94 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     }
     equipUI(); render();
   });
-  (window.SKIN_IDEES || []).forEach((d, i) => $('#idee').insertAdjacentHTML('beforeend', `<option value="${i}">${i + 1}. ${esc(d.nom)}</option>`));
-  $('#idee').addEventListener('change', e => {
-    const v = e.target.value; e.target.value = '';  // le menu revient à son titre : on peut rechoisir la même idée
-    if (v === 'capture') return capture();
-    const d = (window.SKIN_IDEES || [])[v]; if (!d) return;
-    state.classe = d.classe; state.sexe = d.sexe;
-    d.couleurs.forEach((x, i) => state.colors[i + 1] = parseInt(x.slice(1), 16));
-    for (const n of Object.keys(SLOT_NAMES)) state.acc[n] = d.acc[n] && BY_KEY[d.acc[n].cle] ? { ...d.acc[n] } : null;
-    $('#perso').value = ''; equipUI(); render();
+  // ---------- idées de couleurs : une fenêtre comme le choix d'objet. Chaque idée est dessinée sur le perso affiché
+  // (classe, sexe et stuff du moment : « Sur mon stuff », par défaut) ou avec son propre stuff (« Avec leur stuff ») ;
+  // un clic met ses couleurs (et, avec leur stuff, sa classe et ses objets). Les aperçus se dessinent quand ils
+  // apparaissent, gardés tant que le perso et le stuff ne changent pas.
+  const CAPTURE = { nom: 'Comme ta capture', groupe: 'Comme ta capture', classe: 9, sexe: 0, couleurs: ['#f5e3ff', '#332d40', '#f5e3ff'],
+                    acc: { 1: { cle: '16_346', niveau: null }, 2: { cle: '17_317', niveau: null }, 3: { cle: '18_91', niveau: null }, 4: { cle: '82_216', niveau: null } } };
+  const ideas = () => (window.SKIN_IDEES || []).map((d, i) => ({ ...d, i, groupe: d.groupe || 'Stuff et couleurs' })).concat([{ ...CAPTURE, i: 'capture' }]);
+  const ideaGroups = () => {                    // l'ordre voulu (SKIN_IDEES_ORDRE), sinon la série la plus récente en premier
+    const seen = [...new Set((window.SKIN_IDEES || []).map(d => d.groupe || 'Stuff et couleurs'))];
+    const ord = window.SKIN_IDEES_ORDRE || [], g = ord.length ? ord.filter(x => seen.includes(x)).concat(seen.filter(x => !ord.includes(x))) : seen.reverse();
+    return g.concat(['Comme ta capture']);
+  };
+  let ideaMode = 'mien', ideaToken = 0;
+  const ideaShots = new Map();                  // aperçu déjà dessiné, par look
+  const ideaHex = (d) => d.couleurs.map(x => parseInt(x.slice(1), 16));
+  function ideaLook(d) {
+    const c = ideaHex(d), colors = { 1: c[0], 2: c[1], 3: c[2] };
+    return ideaMode === 'mien' ? { classe: state.classe, sexe: state.sexe, colors, acc: JSON.parse(JSON.stringify(state.acc)) }
+                               : { classe: d.classe, sexe: d.sexe, colors, acc: JSON.parse(JSON.stringify(d.acc)) };
+  }
+  const ideaCurrent = (d) => { const c = ideaHex(d); return [1, 2, 3].every(n => state.colors[n] === c[n - 1]) &&
+    (ideaMode === 'mien' || (state.classe === d.classe && state.sexe === d.sexe && [1, 2, 3, 4].every(n => sameItem(state.acc[n], d.acc[n])))); };
+  function fillIdeas() {
+    const q = $('#ideaSearch').value.trim().toLowerCase().replace(/^#/, ''), g = $('#ideaGroup').value;
+    const list = ideas().filter(d => (!g || d.groupe === g) && (!q || d.nom.toLowerCase().includes(q) || d.couleurs.some(x => x.slice(1).includes(q))));
+    $('#ideaCount').textContent = `${list.length} idée${list.length > 1 ? 's' : ''}`;
+    const tok = ++ideaToken;
+    let html = '';
+    for (const grp of ideaGroups()) {
+      const part = list.filter(d => d.groupe === grp); if (!part.length) continue;
+      if (!g) html += `<div class="igroup caps">${esc(grp)} <span class="igcount">${part.length}</span></div>`;
+      html += part.map(d => {
+        const src = ideaShots.get(JSON.stringify(ideaLook(d)));
+        return `<button class="icard" data-idea="${d.i}" title="${esc(d.nom)} · ${d.couleurs.join(' / ').toUpperCase()}"${ideaCurrent(d) ? ' aria-current="true"' : ''}>
+          <span class="pic">${src ? `<img src="${src}" alt="">` : ''}</span><span class="nm">${esc(d.nom)}</span>
+          <span class="sw">${d.couleurs.map(x => `<i style="background:${x}"></i>`).join('')}</span></button>`;
+      }).join('');
+    }
+    $('#ideaGrid').innerHTML = html || '<p class="meta">Aucune idée ne correspond.</p>';
+    const byI = new Map(ideas().map(d => [String(d.i), d]));
+    $('#ideaGrid').querySelectorAll('.icard').forEach(c => { c.onclick = () => pickIdea(byI.get(c.dataset.idea)); });
+    drainIdeas(tok, byI);
+  }
+  async function drainIdeas(tok, byI) {         // un aperçu à la fois, toujours la carte la plus proche de la zone visible
+    const live = () => tok === ideaToken && $('#ideabox').classList.contains('open');
+    while (live()) {
+      const grid = $('#ideaGrid'), gr = grid.getBoundingClientRect();
+      const todo = [...grid.querySelectorAll('.icard')].filter(c => !c.querySelector('img') && !c.dataset.fail);
+      if (!todo.length) return;
+      const dist = (c) => { const r = c.getBoundingClientRect(); return r.bottom < gr.top ? gr.top - r.bottom : r.top > gr.bottom ? r.top - gr.bottom : 0; };
+      let best = todo[0], bd = dist(best);
+      for (const c of todo) { if (!bd) break; const d = dist(c); if (d < bd) { bd = d; best = c; } }
+      const look = ideaLook(byI.get(best.dataset.idea)), key = JSON.stringify(look);
+      let src = ideaShots.get(key);
+      if (!src) { src = await shot(look, live, 3, 'R', true); if (src) ideaShots.set(key, src); }
+      if (!live()) return;
+      if (src) best.querySelector('.pic').innerHTML = `<img src="${src}" alt="">`; else best.dataset.fail = '1';
+    }
+  }
+  function pickIdea(d) {
+    if (ideaMode === 'leur') {
+      if (d.i === 'capture') { closeIdeas(); return capture(); }
+      state.classe = d.classe; state.sexe = d.sexe;
+      for (const n of Object.keys(SLOT_NAMES)) state.acc[n] = d.acc[n] && BY_KEY[d.acc[n].cle] ? { ...d.acc[n] } : null;
+    }
+    const c = ideaHex(d); state.colors = { 1: c[0], 2: c[1], 3: c[2] };
+    $('#perso').value = ''; closeIdeas(); equipUI(); render();
+  }
+  function openIdeas() {
+    const g = $('#ideaGroup'), keep = g.value;
+    g.innerHTML = `<option value="">Toutes les séries (${ideas().length})</option>` + ideaGroups().map(x =>
+      `<option value="${esc(x)}">${esc(x)} (${ideas().filter(d => d.groupe === x).length})</option>`).join('');
+    g.value = keep;
+    $('#ideaMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === ideaMode)));
+    $('#ideabox').classList.add('open'); modal(true); fillIdeas();
+    const cur = $('#ideaGrid [aria-current="true"]'); if (cur) { cur.scrollIntoView({ block: 'center' }); $('#ideaGrid').scrollTop = Math.round($('#ideaGrid').scrollTop); }
+    $('#ideaSearch').focus();
+  }
+  function closeIdeas() { $('#ideabox').classList.remove('open'); ideaToken++; modal(false); $('#idee').focus(); }
+  $('#idee').onclick = openIdeas;
+  $('#ideaClose').onclick = closeIdeas;
+  $('#ideabox').onclick = (e) => { if (e.target.id === 'ideabox') closeIdeas(); };
+  $('#ideaSearch').oninput = fillIdeas;
+  $('#ideaGroup').onchange = () => { fillIdeas(); $('#ideaGrid').scrollTop = 0; };
+  $('#ideaMode').querySelectorAll('button').forEach(b => b.onclick = () => {
+    ideaMode = b.dataset.v; $('#ideaMode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); fillIdeas();
   });
-  $('#classe').addEventListener('change', e => { state.classe = +e.target.value; $('#perso').value = ''; $('#idee').value = ''; render(); });
+  $('#classe').addEventListener('change', e => { state.classe = +e.target.value; $('#perso').value = ''; render(); });
   document.querySelectorAll('#sexe button').forEach(b => b.onclick = () => { state.sexe = +b.dataset.v; $('#perso').value = ''; render(); });
   document.querySelectorAll('#pose button').forEach(b => b.onclick = () => { state.pose = b.dataset.v; state.mode = 'fixe'; render(); });
   document.querySelectorAll('#fond button').forEach(b => b.onclick = () => { state.fond = b.dataset.v; syncUI(); });
@@ -1159,7 +1284,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     return d;
   }
   // rendu de face d'un autre perso, hors écran, sans toucher à l'éditeur ; un portrait d'une liste périmée est sauté
-  function shot(look, valid, zoom = 3, pose = 'F') {   // valid() : faux si la fenêtre a changé entre-temps
+  function shot(look, valid, zoom = 3, pose = 'F', serre = false) {   // valid() : faux si la fenêtre a changé ; serre : cadré au plus près
     return (shotChain = shotChain.then(async () => {
       if (!valid()) return null;
       const holder = document.createElement('div');
@@ -1168,7 +1293,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       try {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); holder.appendChild(svg);
         const r = await draw(svg, pose, false, zoom, look);
-        frame(svg, union(FRAME, r), zoom);
+        frame(svg, serre ? { x0: r.x0 - 1, y0: r.y0 - 1, x1: r.x1 + 1, y1: r.y1 + 1 } : union(FRAME, r), zoom);
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString(svg));
       } finally { holder.remove(); }
     }).catch(() => null));
@@ -1273,7 +1398,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     $('#teamGrid').querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
       const m = members[+b.dataset.open];
       state.classe = m.classe; state.sexe = m.sexe; state.colors = { ...m.d }; state.acc = JSON.parse(JSON.stringify(m.acc || model.acc));
-      $('#perso').value = ''; $('#idee').value = ''; closeTeam(); equipUI(); render();
+      $('#perso').value = ''; closeTeam(); equipUI(); render();
     });
     members.forEach((m, i) => shot({ classe: m.classe, sexe: m.sexe, colors: { ...m.d }, acc: m.acc || model.acc }, () => token === teamToken).then(src => {
       if (token !== teamToken || !src) return;
@@ -1434,7 +1559,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   function openSkin(k) {
     Object.assign(state, lookOfSkin(k), { mode: 'fixe' });
-    $('#idee').value = ''; equipUI(); render(); $('#perso').value = 's:' + k.id;
+    equipUI(); render(); $('#perso').value = 's:' + k.id;
   }
   function drawSkins() {
     const tok = ++skinsToken, list = loadSkins();
@@ -1547,7 +1672,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#cmpbox').onclick = (e) => { if (e.target.id === 'cmpbox') closeCompare(); };
   // fermer par le fond : seulement un clic commencé sur le fond (un glisser parti de la fenêtre et relâché dehors
   // envoie aussi un click au fond)
-  for (const id of ['picker', 'teambox', 'skinsbox', 'cmpbox', 'pipbox']) {
+  for (const id of ['picker', 'teambox', 'skinsbox', 'cmpbox', 'pipbox', 'ideabox']) {
     const el = $('#' + id);
     el.addEventListener('pointerdown', (e) => { el.downOnVeil = e.target === el; }, true);
     el.addEventListener('click', (e) => { if (e.target === el && !el.downOnVeil) e.stopImmediatePropagation(); }, true);
@@ -1569,6 +1694,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     if ($('#cmpbox').classList.contains('open')) closeCompare();
     else if ($('#skinsbox').classList.contains('open')) closeSkins();
     else if ($('#pipbox').classList.contains('open')) closePipette();
+    else if ($('#ideabox').classList.contains('open')) closeIdeas();
   });
 
   // ---------- thème : clair par défaut (comme la maquette), sombre au choix, retenu par le navigateur
@@ -2088,9 +2214,9 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   window.addEventListener('hashchange', () => {
     if (!new URLSearchParams(location.hash.slice(1)).has('c')) return;
     if (pickerSlot) closePicker();              // un lien ouvert par-dessus une fenêtre : on la ferme d'abord
-    for (const [box, close] of [['#teambox', () => closeTeam()], ['#cmpbox', () => closeCompare()], ['#skinsbox', () => closeSkins()], ['#pipbox', () => closePipette()]])
+    for (const [box, close] of [['#teambox', () => closeTeam()], ['#cmpbox', () => closeCompare()], ['#skinsbox', () => closeSkins()], ['#pipbox', () => closePipette()], ['#ideabox', () => closeIdeas()]])
       if ($(box).classList.contains('open')) close();
-    if (applyHash()) { touched(); $('#idee').value = ''; equipUI(); render(); }
+    if (applyHash()) { touched(); equipUI(); render(); }
   });
   $('#share').onclick = async () => {
     const url = location.href.split('#')[0] + '#' + shareHash(), b = $('#share');
