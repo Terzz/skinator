@@ -46,6 +46,7 @@
   .seg button { background: transparent; border: 0; padding: 9px 14px; cursor: pointer; }
   .seg button + button { border-left: 1px solid var(--line); }
   .seg button[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); }
+  .seg button:disabled { opacity: .4; cursor: default; }
   .seg button:focus-visible { outline-offset: -4px; }                         /* dans le bouton : le segment rogne le dehors */
   .seg button[aria-pressed="true"]:focus-visible { outline-color: var(--btn-ink); }
   .dim { opacity: .45; pointer-events: none; }
@@ -165,16 +166,22 @@
   .card .nm { font-size: 11.5px; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .card .id { font-size: 10.5px; color: var(--muted); }
   /* team */
-  #teambox, #skinsbox, #cmpbox { position: fixed; inset: 0; background: var(--veil); display: none; z-index: 10; padding: 24px 16px; }
-  #teambox.open, #skinsbox.open, #cmpbox.open { display: flex; justify-content: center; align-items: flex-start; }
-  #teambox .box, #skinsbox .box, #cmpbox .box { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
-  #teambox header, #skinsbox header, #cmpbox header { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
-  #teambox header h2, #skinsbox header h2, #cmpbox header h2 { font-size: 15px; font-weight: 500; margin: 0; flex: 1; }
-  #teambox .body, #skinsbox .body, #cmpbox .body { overflow: auto; padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  #teambox, #skinsbox, #cmpbox, #pipbox { position: fixed; inset: 0; background: var(--veil); display: none; z-index: 10; padding: 24px 16px; }
+  #teambox.open, #skinsbox.open, #cmpbox.open, #pipbox.open { display: flex; justify-content: center; align-items: flex-start; }
+  #teambox .box, #skinsbox .box, #cmpbox .box, #pipbox .box { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; }
+  #teambox header, #skinsbox header, #cmpbox header, #pipbox header { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  #teambox header h2, #skinsbox header h2, #cmpbox header h2, #pipbox header h2 { font-size: 15px; font-weight: 500; margin: 0; flex: 1; }
+  #teambox .body, #skinsbox .body, #cmpbox .body, #pipbox .body { overflow: auto; padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
   .members { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
   .member { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
   .member .fixed { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; color: var(--ink); background: var(--panel); }
   .mtiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  #teamGrid .tcard { position: relative; }
+  .tdel { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%;
+          background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+  .tdel i { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); display: grid; place-items: center; }
+  .tdel:hover, .tdel:focus-visible { color: var(--ink); }
+  .tdel:hover i, .tdel:focus-visible i { border-color: var(--ink); }
   .mtile { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 6px; align-items: center; padding: 4px 6px; min-height: 38px;
            border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; text-align: left; }
   .mtile:hover { border-color: var(--ink); }
@@ -187,9 +194,30 @@
   .tcard .acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
   .saverow { display: flex; flex-wrap: wrap; gap: 8px; }
   .saverow input { flex: 1 1 220px; }
-  .cmpgrid { grid-template-columns: repeat(2, minmax(0, 260px)); justify-content: center; }
-  .cmpgrid .pic { height: 220px; } .cmpgrid .pic img { max-height: 220px; }
+  .tgrid.cmpgrid { grid-template-columns: repeat(2, minmax(0, 260px)); justify-content: center; }
+  .cmpgrid .tcard .pic { height: 220px; } .cmpgrid .tcard .pic img { max-height: 220px; }
   .head .links { display: flex; gap: 14px; }
+  /* pipette */
+  .pipwrap { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 14px; align-items: start; }
+  @media (max-width: 760px) { .pipwrap { grid-template-columns: minmax(0, 1fr); } }
+  .pipimg { min-height: 320px; max-height: 64vh; overflow: auto; border: 1px dashed var(--line); border-radius: 10px; background: var(--panel);
+            display: flex; align-items: safe center; justify-content: safe center; }
+  .pipimg.over { border-color: var(--ink); }
+  .pipimg canvas { cursor: crosshair; image-rendering: pixelated; display: block; flex: none; }
+  #pipbox [hidden] { display: none !important; }
+  .pipempty { text-align: center; color: var(--muted); padding: 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .pipside { display: flex; flex-direction: column; gap: 10px; }
+  .piptarget { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 10px; width: 100%;
+               border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; text-align: left; }
+  .piptarget[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .piptarget i { width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
+  .piptarget .r { font-size: 12px; color: var(--muted); display: block; }
+  .piptarget code, .piphover code { font-family: inherit; font-variant-numeric: tabular-nums; }
+  #pipOther { align-self: flex-start; }
+  #pipbox header { flex-wrap: wrap; }
+  #pipZoom { flex: none; }
+  .piphover { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; min-height: 22px; }
+  .piphover i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
   #picker { z-index: 11; }                      /* au-dessus de la fenêtre Team quand il choisit pour un de ses persos */
   .tsame { font-size: 12px; color: var(--muted); margin: 0; }
   .tsame b { color: var(--ink); font-weight: 500; }
@@ -197,8 +225,8 @@
   .tcard { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
   .tcard .pic { height: 150px; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
   .tcard .pic img { max-height: 150px; max-width: 100%; }
-  .tcard .nm { font-weight: 500; line-height: 1.2; }
-  .tcard .cl { font-size: 12px; color: var(--muted); }
+  .tcard .nm { font-weight: 500; line-height: 1.2; overflow-wrap: anywhere; max-width: 100%; }
+  .tcard .cl { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; max-width: 100%; }
   .tcols { display: flex; flex-direction: column; gap: 3px; }
   .tcol { display: grid; grid-template-columns: 14px auto auto; gap: 6px; align-items: center; font-size: 12px; }
   .tcol i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
@@ -209,6 +237,8 @@
     .btn, select, .seg button, .color input[type=text] { min-height: 44px; }
     .fonds button { width: 44px; height: 44px; }
     .slot [data-off] { width: 44px; height: 44px; top: 0; right: 0; }
+    .tdel { width: 44px; height: 44px; top: 0; right: 0; }
+    #pipbox header h2 { flex-basis: 100%; }    /* le titre seul, puis taille, Annuler et Fermer sur une ligne */
     .slot .name { padding-right: 30px; }
     .slot .lvl select { min-height: 44px; }
     #pickerSearch { min-height: 44px; }
@@ -281,7 +311,7 @@
       </section>
 
       <section id="colors">
-        <div class="head"><span class="caps">Couleurs</span><button class="link" id="reset">Tout en défaut</button></div>
+        <div class="head"><span class="caps">Couleurs</span><span class="links"><button class="link" id="pipette">Pipette</button><button class="link" id="reset">Tout en défaut</button></span></div>
         <div class="colors">
           <div class="color" data-slot="1"><input type="color" aria-label="Couleur 1"><span class="num">COULEUR I</span><input type="text" spellcheck="false" aria-label="Code de la couleur 1"><label class="def"><input type="checkbox" aria-label="Couleur 1 par défaut"> défaut</label></div>
           <div class="color" data-slot="2"><input type="color" aria-label="Couleur 2"><span class="num">COULEUR II</span><input type="text" spellcheck="false" aria-label="Code de la couleur 2"><label class="def"><input type="checkbox" aria-label="Couleur 2 par défaut"> défaut</label></div>
@@ -330,6 +360,34 @@
       <button class="btn small" id="pickerClose">Fermer</button>
     </header>
     <div class="grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<div id="pipbox" role="dialog" aria-modal="true" aria-labelledby="pipTitle">
+  <div class="box">
+    <header>
+      <h2 id="pipTitle">Pipette</h2>
+      <div class="seg" id="pipZoom" role="group" aria-label="Taille de la capture"><button data-v="0">Ajuster</button><button data-v="2">×2</button><button data-v="4">×4</button></div>
+      <button class="btn small" id="pipUndo">Annuler</button>
+      <button class="btn small primary" id="pipClose">Fermer</button>
+    </header>
+    <div class="body">
+      <div class="pipwrap">
+        <div class="pipimg" id="pipDrop">
+          <canvas id="pipCanvas" hidden></canvas>
+          <div class="pipempty" id="pipEmpty">
+            <span>Dépose une capture de ton perso ici, ou colle-la (⌘V).</span>
+            <button class="btn" id="pipChoose">Choisir une image</button>
+          </div>
+        </div>
+        <div class="pipside">
+          <div id="pipTargets" role="group" aria-label="Couleur à prendre" style="display: flex; flex-direction: column; gap: 6px"></div>
+          <div class="piphover" id="pipHover" aria-live="polite"></div>
+          <button class="btn small" id="pipOther" hidden>Autre image</button>
+          <input type="file" id="pipFile" accept="image/*" hidden>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -406,7 +464,20 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   const hex = (n) => '#' + n.toString(16).padStart(6, '0');
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-                  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+                  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } } };
+  // ce qui vient du navigateur ou d'un lien se vérifie : classe connue, couleur 0xRRGGBB, objet du catalogue à sa place
+  // (Object.hasOwn : « __proto__ » ou « constructor » ne passent pas pour une classe ou un objet)
+  const isClasse = (c) => /^\d{1,2}$/.test(String(c)) && Object.hasOwn(M.classes, String(+c));
+  const cleanColor = (v) => Number.isInteger(v) && v >= 0 && v <= 0xFFFFFF ? v : null;
+  const itemOf = (cle) => typeof cle === 'string' && Object.hasOwn(BY_KEY, cle) ? BY_KEY[cle] : null;
+  function cleanAcc(a, n) {                     // un objet porté valable à l'emplacement n, ou null
+    const x = a && typeof a === 'object' ? itemOf(a.cle) : null;
+    if (!x || x.emplacement !== n) return null;
+    return { cle: x.cle, niveau: x.niveaux ? (x.niveaux.includes(a.niveau) ? a.niveau : x.niveaux[0]) : null };
+  }
+  const cleanColors = (c) => Object.fromEntries([1, 2, 3].map(n => [n, cleanColor(c && typeof c === 'object' ? c[n] : null)]));
+  const cleanAccs = (a) => Object.fromEntries([1, 2, 3, 4].map(n => [n, cleanAcc(a && typeof a === 'object' ? a[n] : null, n)]));
+  const joinEt = (l) => l.length > 1 ? l.slice(0, -1).join(', ') + ' et ' + l[l.length - 1] : l.join('');
   const itemName = (x) => x.noms.length ? x.noms[0] + (x.noms.length > 1 ? ` (+${x.noms.length - 1})` : '') : `Sans nom (gfx ${x.gfx})`;
 
   // ---------- chargement à la demande (balises script : marche en file://)
@@ -784,7 +855,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   const pickerCurrent = () => { const a = pickerFor ? teamAccOf(pickerFor.i)[pickerSlot] : state.acc[pickerSlot]; return a && a.cle; };
   const modal = (on) => { $('.wrap').inert = on; document.body.style.overflow = on ? 'hidden' : ''; };   // fond inerte, sans défilement
   function openPicker(slot, target = null) {
-    pickerSlot = slot; pickerFor = target;
+    pickerSlot = slot; pickerFor = target; pickerFilter = '';       // chaque ouverture repart de « Tous »
     $('#pickerTitle').textContent = target ? `${SLOT_NAMES[slot]} · Perso ${target.i + 2}` : SLOT_NAMES[slot];
     $('#pickerNone').textContent = target ? 'Comme le modèle' : 'Rien';
     $('#pickerAucun').hidden = !target;
@@ -807,7 +878,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   // comment l'objet prend ses couleurs (champ « couleurs » du catalogue, outils/couleurs.py)
   let pickerFilter = '';
   const colorTag = (x) => x.couleurs === 'polykrome' ? 'Polykrome'
-    : x.couleurs === 'perso' ? (x.slots.length > 1 ? `couleurs ${x.slots.join(' et ')}` : `couleur ${x.slots[0]}`) : '';
+    : x.couleurs === 'perso' ? (x.slots.length > 1 ? `couleurs ${joinEt(x.slots)}` : `couleur ${x.slots[0]}`) : '';
   function fillPicker() {
     const q = $('#pickerSearch').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const cur = pickerCurrent();
@@ -828,7 +899,11 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#pickerGrid').onclick = (e) => {
     const c = e.target.closest('.card'); if (!c) return;
     const x = BY_KEY[c.dataset.key], a = { cle: x.cle, niveau: x.niveaux ? x.niveaux[0] : null };
-    if (pickerFor) { const i = pickerFor.i, sl = pickerSlot; closePicker(); return setTeamAcc(i, sl, a); }
+    if (pickerFor) {                            // le même objet vivant que le modèle : au même niveau
+      const i = pickerFor.i, sl = pickerSlot, md = teamModel.acc[sl];
+      if (md && md.cle === x.cle) a.niveau = md.niveau;
+      closePicker(); return setTeamAcc(i, sl, a);
+    }
     state.acc[pickerSlot] = a;
     touched(); closePicker(); equipUI(); render();
   };
@@ -869,9 +944,13 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   function restore() {
     try {
       const s = JSON.parse(store.get('skinator_local_v2') || 'null');
-      if (!s || !M.classes[s.classe]) return;
-      Object.assign(state, s);
-      for (const n of Object.keys(SLOT_NAMES)) if (state.acc[n] && !BY_KEY[state.acc[n].cle]) state.acc[n] = null;
+      if (!s || typeof s !== 'object' || !isClasse(s.classe)) return;
+      Object.assign(state, {
+        classe: +s.classe, sexe: s.sexe ? 1 : 0, colors: cleanColors(s.colors), acc: cleanAccs(s.acc),
+        pose: 'FRSLB'.includes(s.pose) && s.pose ? s.pose : state.pose, miroir: !!s.miroir,
+        mode: s.mode === 'anim' ? 'anim' : 'fixe', vue: Number.isInteger(s.vue) && s.vue >= 0 && s.vue < 7 ? s.vue : 0,
+        zoom: Number.isInteger(s.zoom) && s.zoom >= 2 && s.zoom <= 16 ? s.zoom : state.zoom,
+        fond: ['damier', 'clair', 'sombre', 'herbe'].includes(s.fond) ? s.fond : state.fond });
     } catch (e) {}
   }
 
@@ -952,7 +1031,14 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   // une entrée de team : { qui: 'n:Nom', acc: { 3: {cle, niveau} | null, 4: … } } (clé absente : comme le modèle) ;
   // les anciennes entrées texte (« n:Nom », « p:3 ») restent lues
-  const entryOf = (v) => !v ? null : typeof v === 'string' ? { qui: v, acc: {} } : { qui: v.qui || '', acc: v.acc || {} };
+  function entryOf(v) {                         // vérifiée : seuls le familier et le bouclier, des objets du catalogue
+    if (!v) return null;
+    if (typeof v === 'string') return { qui: v, acc: {} };
+    if (typeof v !== 'object') return null;
+    const acc = {}, a = v.acc && typeof v.acc === 'object' ? v.acc : {};
+    for (const sl of [3, 4]) if (Object.hasOwn(a, sl)) { if (a[sl] === null) acc[sl] = null; else { const c = cleanAcc(a[sl], sl); if (c) acc[sl] = c; } }
+    return { qui: typeof v.qui === 'string' ? v.qui : '', acc };
+  }
   const saveTeam = () => store.set('skinator_team_v1', JSON.stringify(team));
   const OWN_SLOTS = [3, 4];                     // familier, bouclier : propres à chaque perso ; coiffe et cape : le modèle
   function teamAccOf(i) {                       // ce que porte le perso i + 2
@@ -983,7 +1069,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     if (!model.parts.length) [1, 2, 3].forEach(n => put(n, n));               // rien de Polykrome : mêmes couleurs
     else {
       for (const p of model.parts) put(mB[p], mA[p]);                          // 1. ce que montrent les Polykrome portés
-      for (const it of (m.items || model.items))                              // 2. un objet qui prend les couleurs du perso
+      for (const it of (m.items || model.items).filter(it => !m.acc || sameItem(m.acc[it.slot], model.acc[it.slot])))   // 2. un objet du modèle
         if (it.slots.length && it.slots.every(n => from[n] == null || d[n] === model.c[n]))   // en direct, seulement
           it.slots.forEach(n => { if (from[n] == null) put(n, n); });          //    s'il peut sortir pareil en entier
       const used = new Set(Object.values(from));                               // 3. cases libres : les couleurs du modèle pas
@@ -1020,21 +1106,22 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   function renderMembers() {                    // les menus Perso 2 à 8 et, pour chacun, ses tuiles familier / bouclier
     const tile = (i, sl) => {
-      const e = entryOf(team[i]), own = !!e && sl in e.acc, a = own ? e.acc[sl] : teamModel.acc[sl], x = a && BY_KEY[a.cle];
-      const label = own ? (x ? itemName(x) : 'aucun') : (x ? itemName(x) + ' · modèle' : 'comme le modèle');
-      return `<button class="mtile" data-tpick="${i}-${sl}" aria-label="${SLOT_NAMES[sl]} du perso ${i + 2} : ${esc(label)}">
+      const e = entryOf(team[i]), own = !!e && sl in e.acc, a = own ? e.acc[sl] : teamModel.acc[sl], x = a && itemOf(a.cle);
+      const what = SLOT_NAMES[sl] + (own ? '' : ' · modèle'), name = x ? itemName(x) : 'aucun';
+      return `<button class="mtile" data-tpick="${i}-${sl}" title="${esc(what + ' : ' + name)}" aria-label="${SLOT_NAMES[sl]} du perso ${i + 2} : ${esc(name)}${own ? '' : ', comme le modèle'}">
         <span class="thumb">${x && x.vignette ? `<img src="svg/vignettes/${x.cle}.svg" alt="">` : ''}</span>
-        <span class="txt"><span class="what">${SLOT_NAMES[sl]}</span><span class="name">${esc(label)}</span></span></button>`;
+        <span class="txt"><span class="what">${esc(what)}</span><span class="name">${esc(name)}</span></span></button>`;
     };
     $('#teamMembers').innerHTML = `<div class="member"><span>Perso 1 · modèle</span><span class="fixed">${teamModel.nom ? esc(teamModel.nom) + ' · ' : ''}${clsName(teamModel.classe, teamModel.sexe)}</span></div>` +
       Array.from({ length: TEAM_MAX - 1 }, (_, i) => {
         const e = entryOf(team[i]);
         return `<div class="member"><label for="tm${i}">Perso ${i + 2}</label><select id="tm${i}" data-m="${i}">${memberOptions(e && e.qui)}</select>
-          ${e && e.qui ? `<div class="mtiles">${OWN_SLOTS.map(sl => tile(i, sl)).join('')}</div>` : ''}</div>`;
+          ${e && memberOf(e.qui) ? `<div class="mtiles">${OWN_SLOTS.map(sl => tile(i, sl)).join('')}</div>` : ''}</div>`;
       }).join('');
     $('#teamMembers').querySelectorAll('select').forEach(sel => sel.onchange = () => {
       const i = +sel.dataset.m, e = entryOf(team[i]) || { qui: '', acc: {} };
-      e.qui = sel.value; team[i] = sel.value ? e : null; saveTeam(); renderMembers(); drawTeam();
+      e.qui = sel.value; team[i] = e.qui || Object.keys(e.acc).length ? e : null;   // ses objets propres restent à sa ligne
+      saveTeam(); renderMembers(); drawTeam();
       const again = $(`#tm${i}`); if (again) again.focus();
     });
     $('#teamMembers').querySelectorAll('[data-tpick]').forEach(b => b.onclick = () => {
@@ -1046,7 +1133,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     const worn = Object.values(state.acc).filter(Boolean);
     await Promise.all(worn.map(a => loadAcc(a.cle))).catch(() => null);
     const bySlot = {};
-    for (const n of [1, 2, 3, 4]) { const a = state.acc[n]; bySlot[n] = a ? { slot: n, cle: a.cle, niveau: a.niveau, nom: itemName(BY_KEY[a.cle]), ...usage(a.cle, a.niveau) } : null; }
+    for (const n of [1, 2, 3, 4]) { const a = cleanAcc(state.acc[n], n); bySlot[n] = a ? { slot: n, cle: a.cle, niveau: a.niveau, nom: itemName(BY_KEY[a.cle]), ...usage(a.cle, a.niveau) } : null; }
     const items = Object.values(bySlot).filter(Boolean);
     const pv = $('#perso').value, p = pv.startsWith('s:') ? loadSkins().find(x => x.id === pv.slice(2)) : PERSOS[pv];
     teamModel = { nom: p ? p.nom : null, classe: state.classe, sexe: state.sexe, own: { ...state.colors }, items, bySlot,
@@ -1069,29 +1156,44 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     teamMembers = members;
     // ce qui sort pareil sur toute la team, ce qui change
     const same = [], differs = [];
+    const nm = (m) => esc(m.nom || clsName(m.classe, m.sexe));
     for (const it of model.items) {                                      // chez ceux qui portent le même objet
-      const off = members.filter(m => !m.model && sameItem(m.acc[it.slot], model.acc[it.slot]) && it.slots.some(n => shown(m, n) !== model.c[n]));
       if (!it.parts.length && !it.slots.length) continue;                  // couleurs fixes : pareil partout, rien à dire
-      const which = it.slots.length > 1 ? `les couleurs ${it.slots.join(' et ')}` : `la couleur ${it.slots[0]}`;
-      (off.length ? differs : same).push(off.length ? `${esc(it.nom)} (prend ${which} du perso : change sur ${off.map(m => esc(m.nom || clsName(m.classe, m.sexe))).join(', ')})` : esc(it.nom));
+      const others = members.filter(m => !m.model), wear = others.filter(m => sameItem(m.acc[it.slot], model.acc[it.slot]));
+      const off = wear.filter(m => it.slots.some(n => shown(m, n) !== model.c[n]));
+      const not = others.filter(m => !wear.includes(m)), sauf = not.length ? ` (remplacé chez ${not.map(nm).join(', ')})` : '';
+      const which = it.slots.length > 1 ? `les couleurs ${joinEt(it.slots)}` : `la couleur ${it.slots[0]}`;
+      (off.length ? differs : same).push(off.length ? `${esc(it.nom)} (prend ${which} du perso : change sur ${off.map(nm).join(', ')})${sauf}` : esc(it.nom) + sauf);
     }
     $('#teamSame').innerHTML = !model.parts.length
-      ? 'Aucun objet Polykrome porté : rien à aligner, chaque perso reprend les couleurs du modèle.'
+      ? 'Le modèle ne porte rien de Polykrome : rien à aligner, chaque perso reprend ses couleurs.'
       : (same.length ? `Pareil sur toute la team : <b>${same.join('</b>, <b>')}</b>.` : '') +
         (differs.length ? ` Change d'un perso à l'autre : ${differs.join(' ; ')}.` : '');
     const ownLine = (m) => {                    // ce que ce perso porte à la place du modèle
       const t = OWN_SLOTS.filter(sl => !sameItem(m.acc[sl], model.acc[sl]))
-        .map(sl => `${SLOT_NAMES[sl]} : ${m.acc[sl] && BY_KEY[m.acc[sl].cle] ? esc(itemName(BY_KEY[m.acc[sl].cle])) : 'aucun'}`);
+        .map(sl => `${SLOT_NAMES[sl]} : ${m.acc[sl] && itemOf(m.acc[sl].cle) ? esc(itemName(itemOf(m.acc[sl].cle))) : 'aucun'}`);
       return t.length ? `<div class="own">${t.join('<br>')}</div>` : '';
     };
     const chip = chipHtml;
     $('#teamGrid').innerHTML = members.map((m, i) => `<div class="tcard">
+      ${m.model ? '' : `<button class="tdel" data-del="${m.i}" title="Retirer de la team" aria-label="Retirer ${nm(m)} de la team"><i><svg width="8" height="8" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></i></button>`}
       <div class="pic"><img alt="${esc((m.nom ? m.nom + ', ' : '') + clsName(m.classe, m.sexe))} de face"></div>
       <div class="nm">${esc(m.nom || clsName(m.classe, m.sexe))}</div>
       <div class="cl">${[m.nom ? clsName(m.classe, m.sexe) : '', m.model ? 'modèle' : ''].filter(Boolean).join(' · ') || '&nbsp;'}</div>
       <div class="tcols">${[1, 2, 3].map(n => chip(m, n)).join('')}</div>
       ${m.model ? '' : ownLine(m)}
       ${m.model ? '' : `<button class="btn small" data-open="${i}">Ouvrir ce perso</button>`}</div>`).join('');
+    // retirer : les suivants remontent. Le second clic d'un double-clic (detail > 1) tomberait sur la croix du perso
+    // suivant, remonté à la même place : il est ignoré, comme tout clic pendant le redessin
+    $('#teamGrid').querySelectorAll('[data-del]').forEach((b, k) => b.onclick = async (e) => {
+      if (e.detail > 1 || drawTeam.busy) return;
+      drawTeam.busy = true;
+      try {
+        team = team.slice(0, TEAM_MAX - 1); team.splice(+b.dataset.del, 1);   // rien d'invisible au-delà du 8e ne remonte
+        saveTeam(); renderMembers(); await drawTeam();
+      } finally { drawTeam.busy = false; }
+      const del = $('#teamGrid').querySelectorAll('[data-del]'); (del[k] || del[k - 1] || $('#teamPng')).focus();
+    });
     $('#teamGrid').querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
       const m = members[+b.dataset.open];
       state.classe = m.classe; state.sexe = m.sexe; state.colors = { ...m.d }; state.acc = JSON.parse(JSON.stringify(m.acc || model.acc));
@@ -1108,14 +1210,138 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#teambox').onclick = (e) => { if (e.target.id === 'teambox') closeTeam(); };
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#teambox').classList.contains('open') && !pickerSlot) closeTeam(); });
 
+  // ---------- pipette : les 3 couleurs relevées sur une capture du perso en jeu. Le jeu pose chaque couleur en aplat
+  // (Color.setTransform) : à l'intérieur d'une zone colorée, le pixel EST le code. Capture agrandie (2 px d'écran ou plus
+  // par pixel) : on voit chaque pixel, le pixel visé est pris tel quel. Sinon, il est pris s'il touche un pixel de la même
+  // couleur (un liseré d'1 px compte), et sur un bord adouci c'est la couleur qui pèse le plus autour (7 × 7 px, les
+  // pixels proches comptent plus). La capture reste dans le navigateur.
+  // rôle de chaque couleur, relevé sur les 24 sprites (1 rouge, 2 vert, 3 bleu, face et dos)
+  const ROLES = {
+    10: ['Tunique', 'Bottes', 'Cheveux'], 11: ['Robe', 'Bottes', 'Cheveux'],
+    20: ['Cornes · tunique', 'Cheveux · gants · bottes', 'Peau'], 21: ['Bonnet · robe', 'Cheveux · gants · bottes', 'Peau'],
+    30: ['Tenue', 'Ceinture · sandales', 'Barbe'], 31: ['Robe', 'Liseré', 'Cheveux'],
+    40: ['Gants · bottes', 'Capuche · cape', 'Tenue'], 41: ['Voile', 'Capuche · bandes', 'Peau'],
+    50: ['Manches', 'Étoile', 'Robe'], 51: ['Manchettes · bottes', 'Pantalon', 'Haut'],
+    60: ['Pantalon', 'Gilet', 'Pelage'], 61: ['Mèches · veste', 'Pantalon', 'Pelage'],
+    70: ['Ailes · tenue', 'Cheveux · jambes', 'Peau'], 71: ['Ailes', 'Haut · ruban', 'Peau'],
+    80: ['Épaulettes · bottes', 'Cheveux', 'Tenue'], 81: ['Ruban · bottes', 'Cheveux', 'Robe'],
+    90: ['Cheveux', 'Tenue', 'Épaules · gants · bottes'], 91: ['Cheveux', 'Jupe', 'Haut · gants · bottes'],
+    100: ['Pagne · bottes', 'Peau', 'Cheveux'], 101: ['Cheveux', 'Haut · ceinture', 'Peau'],
+    110: ['Bandana · pantalon', 'Cheveux', 'Peau'], 111: ['Bandana · pantalon', 'Cheveux · ceinture', 'Peau'],
+    120: ['Foulard', 'Brassards · corde', 'Pantalon'], 121: ['Nœuds · foulard', 'Brassards', 'Haut · pagne'],
+  };
+  let pipTarget = 1, pipData = null, pipZoom = 0, pipBefore = null, pipLoadToken = 0;
+  function pipTargets() {
+    const roles = ROLES[gfx()] || ['', '', ''];
+    $('#pipTargets').innerHTML = [1, 2, 3].map(n => { const c = state.colors[n];
+      return `<button class="piptarget" data-n="${n}" aria-pressed="${n === pipTarget}">
+        <i style="background:${hex(c != null ? c : classDefault(n))}"></i>
+        <span><span>Couleur ${n}</span><span class="r">${esc(roles[n - 1])}</span></span>
+        <code>${c != null ? hex(c).toUpperCase() : 'défaut'}</code></button>`; }).join('');
+    $('#pipTargets').querySelectorAll('.piptarget').forEach(b => b.onclick = () => {
+      pipTarget = +b.dataset.n; pipTargets(); $(`.piptarget[data-n="${pipTarget}"]`).focus();   // le focus suit (clavier)
+    });
+  }
+  function pipShow() {                          // la capture : entière dans la zone (agrandie par pas entiers si petite), ou ×2, ×4
+    $('#pipZoom').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === pipZoom)));
+    const cv = $('#pipCanvas'); if (!pipData) return;
+    const box = $('#pipDrop'), fit = Math.min((box.clientWidth - 16) / cv.width, (Math.max(320, innerHeight * 0.64) - 16) / cv.height);
+    const k = pipZoom || (fit >= 1 ? Math.min(4, Math.floor(fit)) : fit);
+    cv.style.width = Math.round(cv.width * k) + 'px';
+  }
+  async function pipLoad(file) {                // type vide (fichier sans extension) : on essaie quand même
+    if (!file) return;
+    if (file.type && !file.type.startsWith('image/')) { $('#pipHover').textContent = 'Ce fichier n’est pas une image.'; return; }
+    const tok = ++pipLoadToken;                 // une image choisie après une autre plus lourde garde la place
+    let bmp; try { bmp = await createImageBitmap(file); } catch (e) { if (tok === pipLoadToken) $('#pipHover').textContent = 'Image illisible.'; return; }
+    if (tok !== pipLoadToken) return;
+    const cv = $('#pipCanvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+    cv.width = bmp.width; cv.height = bmp.height; ctx.drawImage(bmp, 0, 0);
+    pipData = ctx.getImageData(0, 0, cv.width, cv.height).data;
+    cv.hidden = false; $('#pipEmpty').hidden = true; $('#pipOther').hidden = false;
+    pipZoom = 0; pipShow(); $('#pipHover').textContent = '';
+  }
+  function pipAt(e) {                           // la couleur sous le pointeur (voir plus haut)
+    const cv = $('#pipCanvas'), r = cv.getBoundingClientRect(), W = cv.width, H = cv.height;
+    const x = Math.floor((e.clientX - r.left) * W / r.width), y = Math.floor((e.clientY - r.top) * H / r.height);
+    if (!pipData || !(x >= 0 && y >= 0 && x < W && y < H)) return null;
+    const at = (X, Y) => {                      // null : hors image ou transparent
+      if (X < 0 || Y < 0 || X >= W || Y >= H) return null;
+      const i = (Y * W + X) * 4; return pipData[i + 3] < 200 ? null : pipData[i] << 16 | pipData[i + 1] << 8 | pipData[i + 2];
+    };
+    const c0 = at(x, y);
+    if (c0 != null) {                           // le pixel visé : vu en grand, ou dans un aplat
+      if (r.width / W >= 2) return c0;
+      let k = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy) === c0) k++;
+      if (k >= 2) return c0;
+    }
+    const score = new Map();                    // sinon : le poids de chaque couleur autour, décroissant avec la distance
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const c = at(x + dx, y + dy); if (c != null) score.set(c, (score.get(c) || 0) + Math.exp(-(dx * dx + dy * dy) / 4.5));
+    }
+    let best = null, bw = 0; for (const [c, w] of score) if (w > bw) { bw = w; best = c; }
+    return best;
+  }
+  function openPipette() {
+    pipBefore = { colors: { ...state.colors }, perso: $('#perso').value }; pipTarget = 1; pipTargets(); $('#pipHover').textContent = '';
+    $('#pipbox').classList.add('open'); modal(true); pipShow(); $('#pipClose').focus();
+  }
+  function closePipette() { $('#pipbox').classList.remove('open'); modal(false); $('#pipette').focus(); }
+  $('#pipette').onclick = openPipette;
+  addEventListener('resize', () => { if (!pipZoom && $('#pipbox').classList.contains('open')) pipShow(); });
+  $('#pipClose').onclick = closePipette;
+  $('#pipbox').onclick = (e) => { if (e.target.id === 'pipbox') closePipette(); };
+  $('#pipUndo').onclick = () => {                // l'état d'avant l'ouverture : couleurs et perso choisi
+    if (!pipBefore) return;
+    state.colors = { ...pipBefore.colors }; $('#perso').value = pipBefore.perso; syncUI(); refreshFilters();
+    pipTarget = 1; pipTargets();
+  };
+  $('#pipZoom').querySelectorAll('button').forEach(b => b.onclick = () => { pipZoom = +b.dataset.v; pipShow(); });
+  $('#pipChoose').onclick = $('#pipOther').onclick = () => $('#pipFile').click();
+  $('#pipFile').onchange = (e) => { pipLoad(e.target.files[0]); e.target.value = ''; };
+  // déposer : partout dans la fenêtre. Ailleurs sur la page, un fichier lâché est ignoré (sinon le navigateur l'ouvre
+  // à la place de la page)
+  const hasFiles = (e) => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+  document.addEventListener('dragover', (e) => {
+    if (!hasFiles(e)) return; e.preventDefault();
+    const inPip = $('#pipbox').classList.contains('open');
+    e.dataTransfer.dropEffect = inPip ? 'copy' : 'none'; $('#pipDrop').classList.toggle('over', inPip);
+  });
+  document.addEventListener('dragleave', (e) => { if (!e.relatedTarget) $('#pipDrop').classList.remove('over'); });
+  document.addEventListener('drop', (e) => {
+    if (!hasFiles(e)) return; e.preventDefault(); $('#pipDrop').classList.remove('over');
+    if ($('#pipbox').classList.contains('open')) pipLoad(e.dataTransfer.files[0]);
+  });
+  document.addEventListener('paste', (e) => {
+    if (!$('#pipbox').classList.contains('open')) return;
+    const it = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.type.startsWith('image/'));
+    if (it) { e.preventDefault(); pipLoad(it.getAsFile()); }
+  });
+  $('#pipCanvas').onmouseleave = () => { $('#pipHover').textContent = ''; };
+  $('#pipCanvas').onmousemove = (e) => {
+    const c = pipAt(e); $('#pipHover').innerHTML = c == null ? '' : `<i style="background:${hex(c)}"></i><code>${hex(c).toUpperCase()}</code>`;
+  };
+  $('#pipCanvas').onclick = (e) => {             // la couleur choisie passe au perso, puis on passe à la suivante
+    const c = pipAt(e); if (c == null) return;
+    state.colors[pipTarget] = c; touched(); syncUI(); refreshFilters();
+    pipTarget = pipTarget % 3 + 1; pipTargets();
+  };
+
   // ---------- mes skins : enregistrés dans le navigateur (classe, sexe, couleurs, objets), rouverts d'un clic, ici ou
   // depuis le menu « Mes persos » ; le portrait est redessiné à l'ouverture (rien d'autre n'est stocké)
   const SKINS_KEY = 'skinator_skins_v1';
-  const loadSkins = () => { try { const t = JSON.parse(store.get(SKINS_KEY) || '[]'); return Array.isArray(t) ? t.filter(k => k && M.classes[k.classe]) : []; } catch (e) { return []; } };
+  function loadSkins() {                        // vérifiés : ce qui vient du navigateur peut avoir été abîmé
+    let t; try { t = JSON.parse(store.get(SKINS_KEY) || '[]'); } catch (e) { return []; }
+    if (!Array.isArray(t)) return [];
+    return t.filter(k => k && typeof k === 'object' && isClasse(k.classe) && typeof k.id === 'string' && /^[\w-]{1,40}$/.test(k.id))
+      .map(k => ({ id: k.id, nom: (typeof k.nom === 'string' && k.nom.trim() ? k.nom : 'Skin').slice(0, 40),
+                   date: typeof k.date === 'string' && !isNaN(Date.parse(k.date)) ? k.date : '',
+                   classe: +k.classe, sexe: k.sexe ? 1 : 0, colors: cleanColors(k.colors), acc: cleanAccs(k.acc) }));
+  }
   const saveSkins = (list) => store.set(SKINS_KEY, JSON.stringify(list));
-  const lookOfSkin = (k) => ({ classe: k.classe, sexe: k.sexe ? 1 : 0, colors: { 1: null, 2: null, 3: null, ...k.colors },
-    acc: Object.fromEntries([1, 2, 3, 4].map(n => [n, k.acc && k.acc[n] && BY_KEY[k.acc[n].cle] ? { ...k.acc[n] } : null])) });
-  const itemsLine = (acc) => [1, 2, 3, 4].map(n => acc[n] && BY_KEY[acc[n].cle]).filter(Boolean).map(itemName).map(esc).join(' · ');
+  const lookOfSkin = (k) => ({ classe: k.classe, sexe: k.sexe, colors: { ...k.colors }, acc: JSON.parse(JSON.stringify(k.acc)) });
+  const itemsLine = (acc) => [1, 2, 3, 4].map(n => acc[n] && itemOf(acc[n].cle)).filter(Boolean).map(itemName).map(esc).join(' · ');
+  const dateFr = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '';
   let skinsToken = 0;
   function fillPersoMenu() {                    // mes persos (captures DofusSuivi) et mes skins enregistrés
     const sel = $('#perso'), v = sel.value, skins = loadSkins();
@@ -1125,7 +1351,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     }).join('');
     sel.innerHTML = `<option value="">Mes persos : reprendre classe, couleurs et équipement</option>` +
       (mine ? `<optgroup label="Mes persos">${mine}</optgroup>` : '') +
-      (skins.length ? `<optgroup label="Mes skins">${skins.map(k => `<option value="s:${k.id}">${esc(k.nom)} · ${clsName(k.classe, k.sexe)}</option>`).join('')}</optgroup>` : '');
+      (skins.length ? `<optgroup label="Mes skins">${skins.map(k => `<option value="s:${esc(k.id)}">${esc(k.nom)} · ${clsName(k.classe, k.sexe)}</option>`).join('')}</optgroup>` : '');
     sel.value = [...sel.options].some(o => o.value === v) ? v : '';
   }
   function openSkin(k) {
@@ -1140,10 +1366,10 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       return `<div class="tcard" data-id="${esc(k.id)}">
         <div class="pic"><img alt="${esc(k.nom)}, de face"></div>
         <div class="nm">${esc(k.nom)}</div>
-        <div class="cl">${clsName(L.classe, L.sexe)} · ${new Date(k.date).toLocaleDateString('fr-FR')}</div>
+        <div class="cl">${[clsName(L.classe, L.sexe), dateFr(k.date)].filter(Boolean).join(' · ')}</div>
         <div class="tcols">${[1, 2, 3].map(n => chipHtml(m, n)).join('')}</div>
         <div class="own">${itemsLine(L.acc) || 'rien de porté'}</div>
-        <div class="acts"><button class="btn small" data-act="open">Ouvrir</button><button class="btn small" data-act="cmp">Comparer</button><button class="btn small" data-act="del">Supprimer</button></div>
+        <div class="acts"><button class="btn small" data-act="open" aria-label="Ouvrir ${esc(k.nom)}">Ouvrir</button><button class="btn small" data-act="cmp" aria-label="Comparer ${esc(k.nom)}">Comparer</button><button class="btn small" data-act="del" aria-label="Supprimer ${esc(k.nom)}">Supprimer</button></div>
       </div>`;
     }).join('');
     $('#skinsGrid').querySelectorAll('.tcard').forEach((card, i) => {
@@ -1161,17 +1387,26 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     });
   }
   function saveCurrentSkin() {
-    const list = loadSkins(), nom = ($('#skinName').value.trim() || `Skin ${list.length + 1}`).slice(0, 40);
+    if (saveCurrentSkin.busy) return;           // une seule fois par appui (Entrée maintenue, double clic)
+    saveCurrentSkin.busy = true; setTimeout(() => { saveCurrentSkin.busy = false; }, 600);
+    const list = loadSkins(), used = new Set(list.map(k => k.nom));
+    let d = 1; while (used.has(`Skin ${d}`)) d++;                     // le premier « Skin n » libre
+    const nom = ($('#skinName').value.trim() || `Skin ${d}`).slice(0, 40);
     const k = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nom, date: new Date().toISOString(),
                 classe: state.classe, sexe: state.sexe, colors: { ...state.colors }, acc: JSON.parse(JSON.stringify(state.acc)) };
-    saveSkins([k, ...list]); $('#skinName').value = ''; fillPersoMenu(); $('#perso').value = 's:' + k.id; drawSkins();
+    if (!saveSkins([k, ...list])) {             // stockage plein ou bloqué : on le dit, le nom tapé reste
+      $('#skinsEmpty').textContent = 'Enregistrement impossible : le stockage du navigateur est plein ou bloqué.'; return;
+    }
+    $('#skinName').value = ''; fillPersoMenu(); $('#perso').value = 's:' + k.id; drawSkins();
   }
-  function openSkins() { $('#skinsbox').classList.add('open'); modal(true); drawSkins(); $('#skinName').focus(); }
+  function openSkins(focus = '#skinName') {
+    $('#skinsbox').classList.add('open'); modal(true); drawSkins(); ($(focus) || $('#skinName')).focus();
+  }
   function closeSkins(back = true) { $('#skinsbox').classList.remove('open'); skinsToken++; if (back) { modal(false); $('#skins').focus(); } }
-  $('#skins').onclick = openSkins;
+  $('#skins').onclick = () => openSkins();
   $('#skinsClose').onclick = () => closeSkins();
   $('#skinSave').onclick = saveCurrentSkin;
-  $('#skinName').onkeydown = (e) => { if (e.key === 'Enter') saveCurrentSkin(); };
+  $('#skinName').onkeydown = (e) => { if (e.key === 'Enter' && !e.repeat) saveCurrentSkin(); };
   $('#skinsCompare').onclick = () => openCompare();
   $('#skinsbox').onclick = (e) => { if (e.target.id === 'skinsbox') closeSkins(); };
 
@@ -1181,7 +1416,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   function sourceOptions(sel) {
     const skins = loadSkins();
     return `<option value="cur"${sel === 'cur' ? ' selected' : ''}>Skin actuel</option>` +
-      (skins.length ? `<optgroup label="Mes skins">${skins.map(k => `<option value="s:${esc(k.id)}"${sel === 's:' + k.id ? ' selected' : ''}>${esc(k.nom)}</option>`).join('')}</optgroup>` : '') +
+      (skins.length ? `<optgroup label="Mes skins">${skins.map(k => `<option value="s:${esc(k.id)}"${sel === 's:' + k.id ? ' selected' : ''}>${esc(k.nom)} · ${clsName(k.classe, k.sexe)}${k.date ? ' · ' + dateFr(k.date) : ''}</option>`).join('')}</optgroup>` : '') +
       (PERSOS.length ? `<optgroup label="Mes persos">${PERSOS.map((q, i) => M.classes[Math.floor(q.gfx / 10)] ? `<option value="p:${i}"${sel === 'p:' + i ? ' selected' : ''}>${esc(q.nom)}</option>` : '').join('')}</optgroup>` : '');
   }
   function sourceLook(v) {                      // { nom, classe, sexe, colors, acc }
@@ -1209,23 +1444,45 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     cards.forEach((c, i) => shot({ classe: c.classe, sexe: c.sexe, colors: { ...c.d }, acc: c.acc }, () => tok === cmpToken, 3, state.pose)
       .then(src => { if (src && imgs[i]) imgs[i].src = src; }));
   }
+  let cmpFromSkins = false, cmpOpener = null;
   function openCompare(avant = null) {
     const skins = loadSkins();
-    if ($('#skinsbox').classList.contains('open')) closeSkins(false);   // on passe d'une fenêtre à l'autre
-    $('#cmpA').innerHTML = sourceOptions(avant || (skins[0] ? 's:' + skins[0].id : PERSOS.length ? 'p:0' : 'cur'));
+    cmpFromSkins = $('#skinsbox').classList.contains('open');
+    const card = avant && avant.startsWith('s:') ? avant.slice(2) : null;   // « Comparer » d'une carte, ou « Avant / après »
+    cmpOpener = card ? `#skinsGrid .tcard[data-id="${card}"] [data-act="cmp"]` : '#skinsCompare';
+    if (cmpFromSkins) closeSkins(false);        // on passe d'une fenêtre à l'autre (Fermer y ramène)
+    // par défaut, « Avant » est le premier skin (ou perso) qui diffère du skin actuel : la première vue compare vraiment
+    const cur = JSON.stringify(sourceLook('cur').acc) + JSON.stringify(sourceLook('cur').colors) + state.classe + state.sexe;
+    const differs = (v) => { const L = sourceLook(v); return JSON.stringify(L.acc) + JSON.stringify(L.colors) + L.classe + L.sexe !== cur; };
+    const first = [...skins.map(k => 's:' + k.id), ...PERSOS.map((q, i) => 'p:' + i)].find(differs);
+    $('#cmpA').innerHTML = sourceOptions(avant || first || 'cur');
     $('#cmpB').innerHTML = sourceOptions('cur');
     $('#cmpbox').classList.add('open'); modal(true); drawCompare(); $('#cmpA').focus();
   }
-  function closeCompare() { $('#cmpbox').classList.remove('open'); cmpToken++; modal(false); $('#skins').focus(); }
+  function closeCompare() {
+    $('#cmpbox').classList.remove('open'); cmpToken++;
+    if (cmpFromSkins) { cmpFromSkins = false; openSkins(cmpOpener); return; }   // retour à Mes skins, sur le bouton d'origine
+    modal(false); $('#skins').focus();
+  }
   $('#cmpA').onchange = $('#cmpB').onchange = drawCompare;
   $('#cmpClose').onclick = closeCompare;
   $('#cmpbox').onclick = (e) => { if (e.target.id === 'cmpbox') closeCompare(); };
+  // fermer par le fond : seulement un clic commencé sur le fond (un glisser parti de la fenêtre et relâché dehors
+  // envoie aussi un click au fond)
+  for (const id of ['picker', 'teambox', 'skinsbox', 'cmpbox', 'pipbox']) {
+    const el = $('#' + id);
+    el.addEventListener('pointerdown', (e) => { el.downOnVeil = e.target === el; }, true);
+    el.addEventListener('click', (e) => { if (e.target === el && !el.downOnVeil) e.stopImmediatePropagation(); }, true);
+  }
   $('#cmpPng').onclick = async () => {
     const btn = $('#cmpPng'); btn.disabled = true; btn.textContent = 'Export…';
     try {
       const cards = cmpCards(), cv = await plancheGroupe(cards, state.pose), b = await new Promise(r => cv.toBlob(r, 'image/png'));
-      const slug = cards.map(c => c.sous.split(' · ')[0]).join('_').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '-').slice(0, 60);
-      b ? download(b, `avant_apres_${slug}.png`) : alert('Export PNG refusé par le navigateur.');
+      const part = (v) => {                     // le nom en ASCII, coupé entre deux mots s'il est long
+        const sl = sourceLook(v).nom.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w]+/g, '-').replace(/^-+|-+$/g, '');
+        return (sl.length > 28 ? sl.slice(0, 28).replace(/-[^-]*$/, '') : sl) || 'skin';
+      };
+      b ? download(b, `avant_apres_${part($('#cmpA').value)}_${part($('#cmpB').value)}_${POSE_FILE[state.pose] || 'face'}.png`) : alert('Export PNG refusé par le navigateur.');
     } catch (e) { alert('Export PNG impossible (' + e.message + ').'); }
     finally { btn.disabled = false; btn.textContent = 'PNG avant / après'; }
   };
@@ -1233,6 +1490,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     if (e.key !== 'Escape' || pickerSlot) return;
     if ($('#cmpbox').classList.contains('open')) closeCompare();
     else if ($('#skinsbox').classList.contains('open')) closeSkins();
+    else if ($('#pipbox').classList.contains('open')) closePipette();
   });
 
   // ---------- thème : clair par défaut (comme la maquette), sombre au choix, retenu par le navigateur
@@ -1381,19 +1639,23 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   // 3 couleurs à saisir en jeu (de gauche à droite : 1, 2, 3) ; 4 persos par ligne au plus (5 -> 3 + 2, 8 -> 4 + 4). En
   // bas, le stuff commun à tous ; sous chacun, ce qu'il porte en propre. Mêmes papier, police et centrage que les autres.
   // carte : { titre, sous, classe, sexe, d (couleurs, null = défaut), acc }
-  async function plancheGroupe(cards, pose = 'F', zoom = 10) {
+  async function plancheGroupe(cards, pose = 'F', zoom = 10, axe = 'encre') {
     await fontsReady();
     const imgs = [];
     for (const k of cards) imgs.push((await renderPoses([pose], zoom, { classe: k.classe, sexe: k.sexe, colors: { ...k.d }, acc: k.acc }))[0]);
     const ink = imgs.map(inkBox), P = Math.round(6 * zoom), PV = Math.round(2 * zoom);
-    const W = Math.max(40 * zoom, ...ink.map(b => b.x1 - b.x0 + 1 + 2 * P));
+    // axe 'encre' : chaque perso centré sur son encre (avant / après) ; axe 'perso' (team) : posé sur son origine (entre
+    // ses pieds), au-dessus de la pastille du milieu, le familier dépasse ; les couleurs restent au milieu de la case
+    const O = -(BIG.x0 - 1) * zoom;              // l'origine du perso dans l'image (cadre BIG, 1 unité de marge)
+    const W = Math.max(40 * zoom, ...ink.map(b => axe === 'perso' ? 2 * Math.max(O - b.x0, b.x1 + 1 - O) + 2 * P : b.x1 - b.x0 + 1 + 2 * P));
     const top = Math.min(...ink.map(b => b.y0)) - PV, H = Math.max(...ink.map(b => b.y1)) + PV - top;
     const n = cards.length, cols = Math.min(4, Math.ceil(n / Math.ceil(n / 4)));
     const rows = []; for (let i = 0; i < n; i += cols) rows.push(Array.from({ length: Math.min(cols, n - i) }, (_, k) => i + k));
     const names = (list) => list.filter(Boolean).map(a => BY_KEY[a.cle]).filter(Boolean).map(itemName);
     const common = [1, 2, 3, 4].filter(sl => cards.every(k => sameItem(k.acc[sl], cards[0].acc[sl])));
     const worn = names(common.map(sl => cards[0].acc[sl]));
-    const ownOf = (k) => names([1, 2, 3, 4].filter(sl => !common.includes(sl)).map(sl => k.acc[sl]));
+    const ownOf = (k) => [1, 2, 3, 4].filter(sl => !common.includes(sl))
+      .map(sl => k.acc[sl] && itemOf(k.acc[sl].cle) ? itemName(itemOf(k.acc[sl].cle)) : 'sans ' + SLOT_NAMES[sl].toLowerCase());
     const anyOwn = cards.some(k => ownOf(k).length);
     const gridW = W * cols, u = W / 470, m = Math.round(80 * u), my = Math.round(48 * u);
     const cap = Math.round((anyOwn ? 176 : 150) * u), rowGap = Math.round(36 * u), rowH = H + cap;
@@ -1402,20 +1664,29 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     // l'image est au moins aussi large que la ligne du stuff (un seul perso : la ligne est plus large que lui)
     const stuffFont = `400 ${Math.round(18 * u)}px ${LX.sans}`, stuff = worn.join('   ·   ');
     const probe = document.createElement('canvas').getContext('2d'); probe.font = stuffFont;
-    const width = Math.ceil(Math.max(gridW, worn.length ? probe.measureText(stuff).width : 0) + 2 * m), mx = (width - gridW) / 2;
+    let width = Math.ceil(Math.max(gridW, worn.length ? probe.measureText(stuff).width : 0) + 2 * m);
+    if ((width - gridW) % 2) width++;           // sinon la grille tombe sur un demi-pixel
+    const mx = (width - gridW) / 2;
     const cv = document.createElement('canvas');
     cv.width = width;
     cv.height = Math.round((worn.length ? stuffY : lastBase) + my + PV);
     const ctx = cv.getContext('2d');
     ctx.fillStyle = LX.paper; ctx.fillRect(0, 0, cv.width, cv.height);
     const lum = (c) => (0.2126 * (c >> 16 & 255) + 0.7152 * (c >> 8 & 255) + 0.0722 * (c & 255)) / 255;
+    // une même taille pour toutes les cases, réduite s'il le faut pour que le texte le plus long tienne
+    const fit = (texts, size, min, weight) => { let fs = size * u;
+      for (const t of texts.filter(Boolean)) { probe.font = `${weight} ${fs}px ${LX.sans}`; while (fs > min * u && probe.measureText(t).width > W - 24 * u) { fs -= 0.5 * u; probe.font = `${weight} ${fs}px ${LX.sans}`; } }
+      return `${weight} ${fs.toFixed(1)}px ${LX.sans}`; };
+    const titreFont = fit(cards.map(c => c.titre), 20, 13, 500), sousFont = fit(cards.map(c => c.sous), 14, 10, 400);
+    const ownFont = fit(cards.map(c => ownOf(c).join('   ·   ')), 13, 9, 400);
     rows.forEach((idx, r) => {
       const y0 = my + r * (rowH + rowGap), left = mx + (cols - idx.length) * W / 2, L = Math.floor(left);   // ligne courte centrée
       idx.forEach((i, k) => {
-        ctx.drawImage(imgs[i], cropX(ink[i], left - L + (W - 1) / 2, sideOf(k, idx.length)), top, W, H, L + k * W, y0, W, H);
+        const sx = axe === 'perso' ? Math.round(O - (left - L) - W / 2) : cropX(ink[i], left - L + (W - 1) / 2, sideOf(k, idx.length));
+        ctx.drawImage(imgs[i], sx, top, W, H, L + k * W, y0, W, H);
         const card = cards[i], cx = left + k * W + W / 2;
-        txt(ctx, card.titre, cx, y0 + H + 34 * u, `500 ${Math.round(20 * u)}px ${LX.sans}`, LX.ink, 'center');
-        if (card.sous) txt(ctx, card.sous, cx, y0 + H + 57 * u, `400 ${Math.round(14 * u)}px ${LX.sans}`, LX.muted, 'center');
+        txt(ctx, card.titre, cx, y0 + H + 34 * u, titreFont, LX.ink, 'center');
+        if (card.sous) txt(ctx, card.sous, cx, y0 + H + 57 * u, sousFont, LX.muted, 'center');
         const colW = Math.min(W / 3, 140 * u);
         [1, 2, 3].forEach((c, j) => {
           const col = shown(card, c), px = cx + (j - 1) * colW, py = y0 + H + 92 * u, rr = 13 * u;
@@ -1425,11 +1696,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
           else txt(ctx, 'DÉFAUT', px, py + 36 * u, `400 ${Math.round(11 * u)}px ${LX.sans}`, LX.muted, 'center', 2.5 * u);
         });
         const mine = ownOf(card).join('   ·   ');
-        if (mine) {                             // ce qu'il porte en propre, réduit s'il le faut pour tenir dans sa case
-          let fs = 13 * u; probe.font = `400 ${fs}px ${LX.sans}`;
-          while (fs > 9 * u && probe.measureText(mine).width > W - 24 * u) { fs -= 0.5 * u; probe.font = `400 ${fs}px ${LX.sans}`; }
-          txt(ctx, mine, cx, y0 + H + 154 * u, `400 ${fs.toFixed(1)}px ${LX.sans}`, LX.muted, 'center');
-        }
+        if (mine) txt(ctx, mine, cx, y0 + H + 154 * u, ownFont, LX.muted, 'center');   // ce qu'il porte en propre
       });
     });
     if (worn.length) {
@@ -1487,18 +1754,25 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       P.prepare(lib, keys);
       frame(svg, BIG, zoom);
       const snap = () => { P.paint(); return toImage(svgString(svg)); };
+      // ce qui boucle : l'image principale, ou, quand elle n'a qu'une image (marche, course), le clip animé qu'elle porte
+      const cycleOf = (root) => {
+        if (!root || root.n > 1) return root;
+        let best = null; for (const k of root.kids.values()) if (k.inst && k.inst.n > 1 && (!best || k.inst.n > best.n)) best = k.inst;
+        return best || root;
+      };
       for (const [vi, view] of VIEWS.entries()) {
         P.start(view);
         if (view[0] === 'static') shots.push({ img: await snap(), delay: 80 });
         else {
           shots.push({ img: await snap(), delay: 5 });
-          for (let t = 0, done = false; !done && t < 240;) {               // une boucle : l'image principale revient au
-            for (let k = 0; k < 3; k++) {                                  // début, ou l'animation est relancée
-              const r0 = P.root, f0 = r0.frame;
+          for (let t = 0, n = 1, done = false; !done && n < 80;) {         // une boucle (80 images, 4 s au plus) : ce qui
+            for (let k = 0; k < 3; k++) {                                  // boucle revient au début, ou la vue est relancée
+              const r0 = P.root, c0 = cycleOf(r0), f0 = c0.frame;
               P.tick(); t++;
-              if (t > 6 && (P.root !== r0 || P.root.frame < f0)) { done = true; break; }
+              const c1 = cycleOf(P.root);
+              if (t > 6 && (P.root !== r0 || c1 !== c0 || c1.frame < f0)) { done = true; break; }
             }
-            if (!done) shots.push({ img: await snap(), delay: 5 });
+            if (!done) { shots.push({ img: await snap(), delay: 5 }); n++; }
           }
         }
         P.lastAnim = view[0];
@@ -1517,56 +1791,61 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       ctx.drawImage(sh.img, x0, y0, W, H, 0, 0, W, H);
       return { rgba: ctx.getImageData(0, 0, W, H).data, delay: sh.delay };
     });
+    onStep(VIEWS.length, VIEWS.length, true); await new Promise(r => setTimeout(r, 30));   // « encodage » s'affiche
     return new Blob([gifEncode(W, H, frames)], { type: 'image/gif' });
   }
-  // encodeur GIF89a, sans dépendance : une table de 256 couleurs pour tout le GIF (les couleurs les plus fréquentes,
-  // à 5 bits par canal, les autres au plus proche : les sprites sont en aplats), LZW, et pour chaque image seulement le
-  // rectangle qui a changé (les images identiques s'additionnent en durée)
+  // encodeur GIF89a, sans dépendance : pour chaque image seulement le rectangle qui a changé (les images identiques
+  // s'additionnent en durée), avec sa propre table de 256 couleurs (les couleurs exactes quand il y en a 256 au plus,
+  // sinon les plus fréquentes à 5 bits par canal et le reste au plus proche : les effets d'une seule vue gardent leurs
+  // couleurs), LZW, boucle infinie
   function gifEncode(W, H, frames) {
-    const sums = new Float64Array(32768 * 4);
-    for (const f of frames) for (let i = 0; i < f.rgba.length; i += 4) {
-      const k = ((f.rgba[i] >> 3) << 10 | (f.rgba[i + 1] >> 3) << 5 | f.rgba[i + 2] >> 3) * 4;
-      sums[k] += f.rgba[i]; sums[k + 1] += f.rgba[i + 1]; sums[k + 2] += f.rgba[i + 2]; sums[k + 3]++;
-    }
-    const used = []; for (let k = 0; k < 32768; k++) if (sums[k * 4 + 3]) used.push(k);
-    used.sort((a, b) => sums[b * 4 + 3] - sums[a * 4 + 3]);
-    const pal = used.slice(0, 256).map(k => [0, 1, 2].map(c => Math.round(sums[k * 4 + c] / sums[k * 4 + 3])));
-    while (pal.length < 256) pal.push([0, 0, 0]);
-    const lut = new Uint8Array(32768);
-    for (const k of used) {
-      const r = (k >> 10 & 31) * 8 + 4, g = (k >> 5 & 31) * 8 + 4, b = (k & 31) * 8 + 4;
-      let best = 0, bd = Infinity;
-      for (let j = 0; j < 256; j++) { const p = pal[j], d = (p[0] - r) ** 2 + (p[1] - g) ** 2 + (p[2] - b) ** 2; if (d < bd) { bd = d; best = j; } }
-      lut[k] = best;
-    }
-    for (const [j, k] of used.slice(0, 256).entries()) lut[k] = j;     // une couleur de la table garde sa place
-    const idx = frames.map(f => { const a = new Uint8Array(W * H);
-      for (let i = 0, p = 0; p < a.length; i += 4, p++) a[p] = lut[(f.rgba[i] >> 3) << 10 | (f.rgba[i + 1] >> 3) << 5 | f.rgba[i + 2] >> 3];
+    const rgb = frames.map(f => { const a = new Uint32Array(W * H);
+      for (let i = 0, p = 0; p < a.length; i += 4, p++) a[p] = f.rgba[i] << 16 | f.rgba[i + 1] << 8 | f.rgba[i + 2];
       return a; });
     let buf = new Uint8Array(1 << 20), n = 0;
-    const put = (...bytes) => { if (n + bytes.length > buf.length) { const nb = new Uint8Array(buf.length * 2); nb.set(buf); buf = nb; } for (const x of bytes) buf[n++] = x; };
+    const grow = (k) => { if (n + k > buf.length) { const nb = new Uint8Array(Math.max(buf.length * 2, n + k)); nb.set(buf); buf = nb; } };
+    const put = (...bytes) => { grow(bytes.length); for (const x of bytes) buf[n++] = x; };
     const w16 = (v) => put(v & 255, v >> 8 & 255);
-    put(...[...'GIF89a'].map(c => c.charCodeAt(0))); w16(W); w16(H); put(0xF7, 0, 0);
-    for (const c of pal) put(c[0], c[1], c[2]);
-    put(0x21, 0xFF, 0x0B, ...[...'NETSCAPE2.0'].map(c => c.charCodeAt(0)), 3, 1, 0, 0, 0);   // boucle infinie
-    const out = [];                                                      // { x, y, w, h, delay, data }
-    idx.forEach((a, i) => {
+    put(...[...'GIF89a'].map(c => c.charCodeAt(0))); w16(W); w16(H); put(0x70, 0, 0);            // pas de table globale
+    put(0x21, 0xFF, 0x0B, ...[...'NETSCAPE2.0'].map(c => c.charCodeAt(0)), 3, 1, 0, 0, 0);        // boucle infinie
+    const out = [];
+    rgb.forEach((a, i) => {
       let bx0 = 0, by0 = 0, bx1 = W - 1, by1 = H - 1;
-      if (i) {                                                           // rectangle qui a changé depuis l'image d'avant
-        const pr = idx[i - 1]; bx0 = W; by0 = H; bx1 = -1; by1 = -1;
+      if (i) {                                  // rectangle qui a changé depuis l'image d'avant
+        const pr = rgb[i - 1]; bx0 = W; by0 = H; bx1 = -1; by1 = -1;
         for (let y = 0; y < H; y++) for (let x = 0, p = y * W; x < W; x++, p++) if (a[p] !== pr[p]) {
           if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; if (y < by0) by0 = y; if (y > by1) by1 = y; }
         if (bx1 < 0) { out[out.length - 1].delay += frames[i].delay; return; }   // identique : on allonge la précédente
       }
-      const w = bx1 - bx0 + 1, h = by1 - by0 + 1, sub = new Uint8Array(w * h);
-      for (let y = 0; y < h; y++) sub.set(a.subarray((by0 + y) * W + bx0, (by0 + y) * W + bx0 + w), y * w);
-      out.push({ x: bx0, y: by0, w, h, delay: frames[i].delay, data: lzw(sub) });
+      const w = bx1 - bx0 + 1, h = by1 - by0 + 1, px = new Uint32Array(w * h);
+      for (let y = 0; y < h; y++) px.set(a.subarray((by0 + y) * W + bx0, (by0 + y) * W + bx0 + w), y * w);
+      const count = new Map(); for (const c of px) count.set(c, (count.get(c) || 0) + 1);
+      let pal, index;
+      if (count.size <= 256) {                  // les couleurs exactes
+        pal = [...count.keys()]; const at = new Map(pal.map((c, j) => [c, j])); index = (c) => at.get(c);
+      } else {                                  // les plus fréquentes à 5 bits, le reste au plus proche
+        const sums = new Map();
+        for (const [c, k] of count) { const b = (c >> 19 & 31) << 10 | (c >> 11 & 31) << 5 | (c >> 3 & 31), e = sums.get(b) || [0, 0, 0, 0];
+          e[0] += (c >> 16 & 255) * k; e[1] += (c >> 8 & 255) * k; e[2] += (c & 255) * k; e[3] += k; sums.set(b, e); }
+        const top = [...sums.entries()].sort((x, y) => y[1][3] - x[1][3]).slice(0, 256);
+        pal = top.map(([, e]) => Math.round(e[0] / e[3]) << 16 | Math.round(e[1] / e[3]) << 8 | Math.round(e[2] / e[3]));
+        const memo = new Map();
+        index = (c) => { let j = memo.get(c); if (j !== undefined) return j;
+          let bd = Infinity; const r = c >> 16 & 255, g = c >> 8 & 255, b = c & 255;
+          for (let q = 0; q < pal.length; q++) { const p = pal[q], d = ((p >> 16 & 255) - r) ** 2 + ((p >> 8 & 255) - g) ** 2 + ((p & 255) - b) ** 2; if (d < bd) { bd = d; j = q; } }
+          memo.set(c, j); return j; };
+      }
+      const ix = new Uint8Array(px.length); for (let q = 0; q < px.length; q++) ix[q] = index(px[q]);
+      out.push({ x: bx0, y: by0, w, h, delay: frames[i].delay, pal, data: lzw(ix) });
     });
     for (const f of out) {
       put(0x21, 0xF9, 4, 0x04, f.delay & 255, f.delay >> 8 & 255, 0, 0);   // on laisse l'image en place (disposition 1)
-      put(0x2C); w16(f.x); w16(f.y); w16(f.w); w16(f.h); put(0, 8);
-      for (let i = 0; i < f.data.length; i += 255) { const m = Math.min(255, f.data.length - i); put(m); for (let j = 0; j < m; j++) put(f.data[i + j]); }
-      put(0);
+      put(0x2C); w16(f.x); w16(f.y); w16(f.w); w16(f.h); put(0x87);        // table locale de 256 couleurs
+      grow(768); for (let q = 0; q < 256; q++) { const c = f.pal[q] || 0; buf[n++] = c >> 16 & 255; buf[n++] = c >> 8 & 255; buf[n++] = c & 255; }
+      put(8);
+      grow(f.data.length + Math.ceil(f.data.length / 255) + 1);
+      for (let i = 0; i < f.data.length; i += 255) { const m = Math.min(255, f.data.length - i); buf[n++] = m; for (let j = 0; j < m; j++) buf[n++] = f.data[i + j]; }
+      buf[n++] = 0;
     }
     put(0x3B);
     return buf.slice(0, n);
@@ -1655,7 +1934,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#gif').onclick = async () => {
     const btn = $('#gif'); btn.disabled = true; btn.textContent = 'GIF…';
     try {
-      const b = await gifAnim(5, (i, n) => { btn.textContent = `GIF ${Math.round(100 * i / n)} %`; });
+      const b = await gifAnim(5, (i, n, enc) => { btn.textContent = enc ? 'GIF : encodage…' : `GIF ${Math.round(90 * i / n)} %`; });
       download(b, fileBase() + '_animations.gif');
     } catch (e) { alert('Export GIF impossible (' + e.message + ').'); }
     finally { btn.disabled = false; btn.textContent = 'GIF animé'; }
@@ -1671,7 +1950,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#teamPng').onclick = async () => {
     const btn = $('#teamPng'); btn.disabled = true; btn.textContent = 'Export…';
     try {
-      const cv = await plancheGroupe(teamCards()), b = await new Promise(r => cv.toBlob(r, 'image/png'));
+      const cv = await plancheGroupe(teamCards(), 'F', 10, 'perso'), b = await new Promise(r => cv.toBlob(r, 'image/png'));
       b ? download(b, `team_${teamMembers.length}-persos.png`) : alert('Export PNG refusé par le navigateur.');
     } catch (e) { alert('Export PNG impossible (' + e.message + ').'); }
     finally { btn.disabled = false; btn.textContent = 'PNG de la team'; }
@@ -1690,29 +1969,43 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   function applyHash() {                        // vrai si l'adresse portait un skin valable
     const q = new URLSearchParams(location.hash.slice(1));
-    if (!q.has('c') || !M.classes[+q.get('c')]) return false;
+    if (!q.has('c')) return false;
+    const clean = () => history.replaceState(null, '', location.pathname + location.search);   // l'adresse redevient propre
+    if (!isClasse(q.get('c'))) {                // lien abîmé : on le dit, rien ne change
+      clean(); flash('Lien de skin illisible : rien n’a été changé.'); return false;
+    }
     state.classe = +q.get('c'); state.sexe = q.get('s') === '1' ? 1 : 0;
     const k = (q.get('k') || '').split(',');
     state.colors = Object.fromEntries([1, 2, 3].map(n => [n, /^[0-9a-f]{6}$/i.test(k[n - 1] || '') ? parseInt(k[n - 1], 16) : null]));
     const parts = (q.get('a') || '').split(',');
     for (const n of [1, 2, 3, 4]) {
-      const [cle, lvl] = (parts[n - 1] || '').split('~'), x = BY_KEY[cle];
-      state.acc[n] = x && x.emplacement === n
-        ? { cle, niveau: x.niveaux ? (x.niveaux.includes(+lvl) ? +lvl : x.niveaux[0]) : null } : null;
+      const [cle, lvl] = (parts[n - 1] || '').split('~');
+      state.acc[n] = cleanAcc({ cle, niveau: /^\d{1,3}$/.test(lvl || '') ? +lvl : null }, n);
     }
     state.mode = 'fixe';
-    history.replaceState(null, '', location.pathname + location.search);   // l'état reste mémorisé, l'adresse redevient propre
+    clean();                                    // l'état reste mémorisé
     return true;
   }
-  window.addEventListener('hashchange', () => { if (applyHash()) { touched(); $('#idee').value = ''; equipUI(); render(); } });
+  function flash(msg) {                         // un message bref dans la barre de l'aperçu
+    const st = $('#status'); st.textContent = msg; clearTimeout(flash.t); flash.t = setTimeout(() => render(), 4000);
+  }
+  window.addEventListener('hashchange', () => {
+    if (!new URLSearchParams(location.hash.slice(1)).has('c')) return;
+    if (pickerSlot) closePicker();              // un lien ouvert par-dessus une fenêtre : on la ferme d'abord
+    for (const [box, close] of [['#teambox', () => closeTeam()], ['#cmpbox', () => closeCompare()], ['#skinsbox', () => closeSkins()], ['#pipbox', () => closePipette()]])
+      if ($(box).classList.contains('open')) close();
+    if (applyHash()) { touched(); $('#idee').value = ''; equipUI(); render(); }
+  });
   $('#share').onclick = async () => {
     const url = location.href.split('#')[0] + '#' + shareHash(), b = $('#share');
+    let ok = true;
     try { await navigator.clipboard.writeText(url); }
     catch (e) {                                 // repli : sélection d'un champ caché puis copie
       const t = document.createElement('textarea'); t.value = url; t.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove();
+      document.body.appendChild(t); t.select(); try { ok = document.execCommand('copy'); } catch (e2) { ok = false; } t.remove();
+      b.focus();                                // le champ caché a pris le focus : on le rend au bouton
     }
-    b.textContent = 'Lien copié'; clearTimeout(b._t); b._t = setTimeout(() => { b.textContent = 'Copier le lien'; }, 1500);
+    b.textContent = ok ? 'Lien copié' : 'Copie impossible'; clearTimeout(b._t); b._t = setTimeout(() => { b.textContent = 'Copier le lien'; }, 1500);
   };
 
   // ---------- démarrage
