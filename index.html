@@ -623,7 +623,10 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   // captures DofusSuivi, toujours couleur II, III, III du perso), sur les Dragodindes de toutes couleurs ; jamais sur le
   // Paladin, le Tabi, le Karnage, le Bouftea Maur (125 joueurs montés), et la Squelette n'y apparaît pas : pas de Caméléone
   // pour eux. La Dragodinde en armure non plus, à sa demande (les captures en montrent 8 sur 45 aux couleurs du cavalier)
-  const MONTURES = window.SKIN_MONTURES || [], MONTURE_BY_ID = Object.fromEntries(MONTURES.map(m => [m.id, m]));
+  // les 3 Sauvages (Amande, Rousse, Dorée) et la Squelette ne sont montées par aucun des 1 597 joueurs des captures :
+  // pas proposées (75 modèles dans la langue, 71 ici)
+  const JAMAIS_MONTEES = new Set([1, 6, 74, 75]);
+  const MONTURES = (window.SKIN_MONTURES || []).filter(m => !JAMAIS_MONTEES.has(m.id)), MONTURE_BY_ID = Object.fromEntries(MONTURES.map(m => [m.id, m]));
   const SANS_CAMELEONE = new Set([75, 88, 89, 90, 91, 92]);
   function cleanMonture(v) {                    // { id, came } vérifié ; « cameleone » et un simple n° : les formes d'avant
     if (v === 'cameleone') return { id: 20, came: true };          // Dragodinde Amande : toutes les Dragodindes caméléones se ressemblent
