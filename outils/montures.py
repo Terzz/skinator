@@ -13,7 +13,9 @@ Comme le client (loader.swf, sprite monté @7381553 et @7388369, GAC.registerChe
   sa rotation et ses échelles ;
 - les couleurs de la dragodinde : GAC.applyColor(clip, n, true) lit mount.color<n> (filtres mslot1..3 dans la page).
 
-Écrit data/montures.js (les modèles), data/monture/<g>.js (une dragodinde) et data/chevaucheur/<gfx>.js (un perso).
+Écrit data/montures.js (les modèles), data/monture/<g>.js (une dragodinde) et data/chevaucheur/<gfx>.js (un perso) ;
+pour le lecteur d'animations, data/montureanim/<g>.js et data/chevaucheuranim/<gfx>.js (format de anim_export.py, plus
+l'instruction ['hook'] pour GAC.registerChevauchor(this)).
 """
 import json
 import math
@@ -25,12 +27,20 @@ SWF, WORK, RIDES, OUT = sys.argv[1:5]
 sys.argv = ['build.py', '', '', '', '', '']            # build.py lit ses arguments à l'import
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.expanduser('~/Documents/Dofus/DofusSuivi'))
-import build, evaluate, scripts_index, swfscene
+import anim_export, build, evaluate, scripts_index, swfscene
 import jeu
 
 POSES = 'SRLFB'
 # GAC.applyColor(clip, n, true) : la couleur de la monture (3e argument) ; même filtre que le perso, renommé ensuite
 evaluate.RE_COLOR = re.compile(r'^GAC\.applyColor\((\w+),(\d)(?:,true)?\);$')
+anim_export.R_COLOR = evaluate.RE_COLOR
+_statement = anim_export.statement
+anim_export.statement = lambda line: ['hook'] if line == 'GAC.registerChevauchor(this);' else _statement(line)
+# les vues du lecteur (fenêtre Caractéristiques) : statiques, marche et course de face, anim 2, plus la course de profil
+# sur une dragodinde ; le client attache « <anim><dir>_Back/_Front » à la dragodinde et « <anim><dir> » au cavalier,
+# sinon « static<dir> » (@7388369)
+ANIM_DRAGO = r'(static[SRLFB]|walkF|run[FS])_(Back|Front)'
+ANIM_CAVALIER = r'static[SRLFB]|anim2[RL]'
 log = {}
 
 
@@ -102,6 +112,14 @@ def write_js(path, kind, key, data):
         f.write('SKIN_ADD(%s, %s, %s);\n' % (json.dumps(kind), json.dumps(key), json.dumps(data, ensure_ascii=False)))
 
 
+def anim(sc, ev, nom, names, prefix, kind, key):
+    """La bibliothèque d'animations d'un SWF : les symboles exportés qui servent aux vues du lecteur."""
+    exports = {n: cid for n, cid in sc['exports'].items() if re.fullmatch(names, n)}
+    lib = anim_export.library(sc, ev.scripts, list(exports.values()), build.shape_markup, shapes_dir(nom), prefix)
+    lib.update(fps=60, exports=exports)
+    write_js(os.path.join(OUT, 'data', kind, '%s.js' % key), kind, key, lib)
+
+
 def main():
     build.with_depth_display_list()
     RI = jeu.load_swf(RIDES)['RI']
@@ -138,6 +156,7 @@ def main():
                         'box': [round(min(xs), 2), round(min(ys), 2), round(max(xs), 2), round(max(ys), 2)]}
         data = {'defs': ''.join(w.shapes.values()) + ''.join(w.cx.values()), 'poses': poses}
         write_js(os.path.join(OUT, 'data', 'monture', '%d.js' % g), 'monture', nom, data)
+        anim(sc, ev, nom, ANIM_DRAGO, 'mm%d' % g, 'montureanim', nom)
         print('monture', g, 'accroches', sorted(hooks), 'ko', len(json.dumps(data)) // 1024)
 
     for c in range(1, 13):
@@ -149,6 +168,7 @@ def main():
             poses = {p: w.node(strip(ev.clip(sc['exports']['static' + p]))) for p in POSES}
             data = {'defs': ''.join(w.shapes.values()) + ''.join(w.cx.values()), 'poses': poses}
             write_js(os.path.join(OUT, 'data', 'chevaucheur', '%d.js' % gfx), 'chevaucheur', str(gfx), data)
+            anim(sc, ev, nom, ANIM_CAVALIER, 'mr%d' % gfx, 'chevaucheuranim', str(gfx))
             print('chevaucheur', gfx, 'ko', len(json.dumps(data)) // 1024)
 
     with open(os.path.join(OUT, 'data', 'montures.js'), 'w', encoding='utf-8') as f:

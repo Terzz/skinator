@@ -570,7 +570,7 @@
 </div>
 
 <script>
-window.SKIN = { sprite: {}, acc: {}, anim: {}, accanim: {}, monture: {}, chevaucheur: {} };
+window.SKIN = { sprite: {}, acc: {}, anim: {}, accanim: {}, monture: {}, chevaucheur: {}, montureanim: {}, chevaucheuranim: {} };
 function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
 </script>
 <script src="data/meta.js"></script>
@@ -734,7 +734,6 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     const id = ++renderId;
     setStatus('Chargement…');
     const mo = montureOf(state.monture);
-    if (mo) state.mode = 'fixe';                // l'animation : pas encore sur une dragodinde
     syncUI();
     if (state.mode === 'anim') return player.show(id);
     player.stop();
@@ -757,10 +756,24 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   // GAC.applyAnim rejoue l'animation en cours). Directions du client : F = 2, R = 1, L = 5, jamais retournées.
   const VIEWS = [['static', 'F', 'Statique, face'], ['static', 'R', 'Statique, ¾ face'], ['static', 'L', 'Statique, ¾ dos'],
                  ['walk', 'F', 'Marche, face'], ['run', 'F', 'Course, face'], ['anim2', 'R', 'Anim 2, ¾ face'], ['anim2', 'L', 'Anim 2, ¾ dos']];
+  // sur une dragodinde, la course de profil en plus, après la course de face (pas dans la fenêtre du jeu)
+  const VIEWS_MONTE = [...VIEWS.slice(0, 5), ['run', 'S', 'Course, profil'], ...VIEWS.slice(5)];
+  const viewsOf = () => montureOf(state.monture) ? VIEWS_MONTE : VIEWS;
   const FRAME_ANIM = { x0: -34, y0: -66, x1: 34, y1: 12 };
+  const FRAME_ANIM_MONTE = { x0: -40, y0: -90, x1: 40, y1: 14 };
   const ID = [1, 0, 0, 1, 0, 0];
   const loadAnim = (g) => load('anim', String(g), `data/anim/${g}.js`);
   const loadAccAnim = (k) => load('accanim', k, `data/accanim/${k}.js`);
+  const loadMontureAnim = (g) => load('montureanim', String(g), `data/montureanim/${g}.js`);
+  const loadChevaucheurAnim = (g) => load('chevaucheuranim', String(g), `data/chevaucheuranim/${g}.js`);
+  // ce que joue le lecteur : le perso et ses objets ; sur une dragodinde, le perso « chevaucheur » et la dragodinde
+  async function animLibs() {
+    const keys = Object.values(state.acc).filter(Boolean).map(a => a.cle), mo = montureOf(state.monture);
+    const [lib, mlib] = await Promise.all([mo ? loadChevaucheurAnim(gfx()) : loadAnim(gfx()), mo && loadMontureAnim(mo.gfx), ...keys.map(loadAccAnim)]);
+    return { lib, mlib, keys };
+  }
+  const compose = (p, c) => [p[0] * c[0] + p[2] * c[1], p[1] * c[0] + p[3] * c[1], p[0] * c[2] + p[2] * c[3], p[1] * c[2] + p[3] * c[3],
+                             p[0] * c[4] + p[2] * c[5] + p[4], p[1] * c[4] + p[3] * c[5] + p[5]];
   const fmt = (v) => +v.toFixed(4);
   const matAttr = (m) => (m === ID || (m[0] === 1 && m[1] === 0 && m[2] === 0 && m[3] === 1 && m[4] === 0 && m[5] === 0)) ? '' : ` transform="matrix(${m.map(fmt).join(',')})"`;
 
@@ -784,9 +797,9 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
 
   class Clip {
-    constructor(P, lib, id, parent, isAcc) {
+    constructor(P, lib, id, parent, kind = '') {
       this.P = P; this.lib = lib; this.def = lib.sprites[id]; this.n = this.def.f.length; this.parent = parent;
-      this.frame = -1; this.playing = true; this.kids = new Map(); this.color = null; this.att = null; this.isAcc = !!isAcc;
+      this.frame = -1; this.playing = true; this.kids = new Map(); this.color = null; this.att = null; this.kind = kind;
       this.born = P.tickN;
     }
     child(name) { for (const k of this.kids.values()) if (k.e.n === name) return k; return null; }
@@ -797,7 +810,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       for (const [d, e] of dlOf(this.def, f)) {
         const old = this.kids.get(d);
         if (old && old.e.key === e.key) { kids.set(d, { e, inst: old.inst }); continue; }
-        const inst = this.lib.sprites[e.c] ? new Clip(this.P, this.lib, e.c, this, this.isAcc) : null;
+        const inst = this.lib.sprites[e.c] ? new Clip(this.P, this.lib, e.c, this, this.kind) : null;
         kids.set(d, { e, inst });
         if (inst) inst.setFrame(0, q);
       }
@@ -813,19 +826,21 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     stop() { cancelAnimationFrame(this.raf); this.raf = 0; this.root = null; $('#stagebox').classList.remove('anim'); },
     async show(id) {
       cancelAnimationFrame(this.raf); this.raf = 0;
-      const g = gfx(), view = VIEWS[state.vue];
-      const keys = Object.values(state.acc).filter(Boolean).map(a => a.cle);
-      let lib;
-      try { [lib] = await Promise.all([loadAnim(g), ...keys.map(loadAccAnim)]); }
+      const V = viewsOf();
+      if (state.vue >= V.length) state.vue = 0;
+      const view = V[state.vue];
+      let L;
+      try { L = await animLibs(); }
       catch (e) { if (id === renderId) setStatus(e.message); return; }
       if (id !== renderId) return;
       this.svg = $('#stage');
-      this.prepare(lib, keys);
-      frame(this.svg, FRAME_ANIM, state.zoom * 0.8);
+      this.prepare(L);
+      frame(this.svg, L.mlib ? FRAME_ANIM_MONTE : FRAME_ANIM, state.zoom * 0.8);
       $('#stagebox').classList.add('anim');
       this.start(view);
       const cls = M.classes[state.classe].nom + (state.sexe ? ' femelle' : ' mâle');
-      setStatus(`${cls} · animée, vue ${state.vue + 1}/7 : ${view[2]} · clic sur le perso : vue suivante`);
+      const mo = montureOf(state.monture);
+      setStatus(`${cls} · animée, vue ${state.vue + 1}/${V.length} : ${view[2]}${mo ? ' · ' + montureName(mo) : ''} · clic sur le perso : vue suivante`);
       let last = performance.now(), acc = 0;
       const loop = (t) => {
         acc += Math.min(250, t - last); last = t;
@@ -837,16 +852,45 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       this.paint();
       this.raf = requestAnimationFrame(loop);
     },
-    prepare(lib, keys) {
-      this.lib = lib;
+    prepare({ lib, mlib, keys }) {
+      this.lib = lib; this.mlib = mlib || null;
       this.cx = new Map();
       this.svg.innerHTML = `<defs class="filters">${filtersMarkup()}</defs><defs class="cx"></defs>` +
-        `<defs>${lib.defs}${keys.map(k => SKIN.accanim[k].defs).join('')}</defs><g class="root"></g>`;
+        `<defs>${lib.defs}${mlib ? mlib.defs : ''}${keys.map(k => SKIN.accanim[k].defs).join('')}</defs><g class="root"></g>`;
     },
     start(view) {
       this.view = view;
-      this.root = new Clip(this, this.lib, this.lib.exports[view[0] + view[1]], null, false);
+      if (this.mlib) return this.startMonte(view);
+      this.root = new Clip(this, this.lib, this.lib.exports[view[0] + view[1]], null);
       this.run(q => this.root.setFrame(0, q));
+    },
+    // sur une dragodinde (loader.swf @7388369) : « <vue>_Back » de la dragodinde (profondeur 10), le chevaucheur qui joue
+    // « <vue> » (20), « <vue>_Front » (30) ; ce qui manque est remplacé par la pose fixe de la même direction. Le
+    // chevaucheur suit à chaque image le clip qui appelle GAC.registerChevauchor (le client le replace à chaque image).
+    startMonte(view) {
+      const [anim, dir] = view, ml = this.mlib, rl = this.lib;
+      const pick = (lib, name, alt) => lib.exports[name] ?? lib.exports[alt];
+      const root = { n: 1, frame: 0, playing: false, kids: new Map(), att: null, parent: null, born: this.tickN, lib: rl, monte: true, child: () => null };
+      for (const [d, lib, id, kind] of [[10, ml, pick(ml, `${anim}${dir}_Back`, `static${dir}_Back`), 'm'],
+                                        [20, rl, pick(rl, anim + dir, 'static' + dir), ''],
+                                        [30, ml, pick(ml, `${anim}${dir}_Front`, `static${dir}_Front`), 'm']])
+        if (id !== undefined) root.kids.set(d, { e: { m: ID }, inst: new Clip(this, lib, id, root, kind) });
+      this.root = root; this.hook = null;
+      this.run(q => { for (const k of root.kids.values()) k.inst.setFrame(0, q); });
+    },
+    placeRider() {
+      const h = this.hook, rider = this.root && this.root.monte && this.root.kids.get(20);
+      if (!h || h.dead || !rider) return;
+      let m = ID, own = null;
+      for (let c = h; c && c.parent; c = c.parent) {
+        const k = [...c.parent.kids.values()].find(x => x.inst === c);
+        if (!k) return;                         // l'accroche n'est plus à l'image
+        if (!own) own = k.e.m || ID;
+        m = compose(k.e.m || ID, m);
+      }
+      // chevauchor._x/_y : la position de l'accroche ramenée dans le sprite ; _rotation, _xscale, _yscale : les siens
+      const sx = Math.hypot(own[0], own[1]), sy = Math.hypot(own[2], own[3]), r = Math.atan2(own[1], own[0]);
+      rider.e = { m: [Math.cos(r) * sx, Math.sin(r) * sx, -Math.sin(r) * sy, Math.cos(r) * sy, m[4], m[5]] };
     },
     run(fn) {                                   // une étape, puis les scripts des images atteintes (dans l'ordre)
       const q = [];
@@ -860,6 +904,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       }
       this.depth--;
       if (this.again && this.depth === 0) { this.again = false; this.lastAnim = this.view[0]; this.start(this.view); }
+      if (this.depth === 0 && this.mlib) this.placeRider();
     },
     tick() {
       this.tickN++;
@@ -883,6 +928,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
           case 'stop': c.playing = false; break;
           case 'play': c.playing = true; break;
           case 'parentPlay': if (c.parent) c.parent.playing = true; break;
+          case 'hook': this.hook = c; break;     // GAC.registerChevauchor(this)
           case 'goto': {
             const t = op[2];
             const f = t[0] === 'label' ? c.def.l[t[1]] : t[0] === 'frame' ? t[1] : Math.floor(Math.random() * t[1]) + t[2];
@@ -907,7 +953,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       c.att = null;
       const want = state.acc[slot], lib = want && SKIN.accanim[want.cle];
       if (!lib) return;
-      const a = new Clip(this, lib, lib.root, c, true);
+      const a = new Clip(this, lib, lib.root, c, 'a');
       this.run(q => a.setFrame(0, q));
       const target = label + (want.niveau != null ? want.niveau : '');
       const f = a.def.l[target];
@@ -955,7 +1001,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       if (k.att) return `<g>${this.markup(k.att)}</g>`;
       const e = k.e, inst = k.inst;
       let f = '';
-      if (inst && inst.color) f = inst.color.slot ? ` filter="url(#${inst.isAcc ? 'a' : ''}slot${inst.color.slot})"` : ` filter="url(#part-${inst.color.part})"`;
+      if (inst && inst.color) f = inst.color.slot ? ` filter="url(#${inst.kind}slot${inst.color.slot})"` : ` filter="url(#part-${inst.color.part})"`;
       else if (e.x) f = ` filter="url(#${this.cxId(e.x)})"`;
       if (inst) return `<g${matAttr(e.m)}${f}>${this.markup(inst)}</g>`;
       if (!parent.lib.shapes.includes(e.c)) return '';
@@ -981,8 +1027,9 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   });
   $('#stagebox').addEventListener('click', () => {
     if (state.mode !== 'anim') return;
-    player.lastAnim = VIEWS[state.vue][0];
-    state.vue = (state.vue + 1) % VIEWS.length;
+    const V = viewsOf();
+    player.lastAnim = (V[state.vue] || V[0])[0];
+    state.vue = (state.vue + 1) % V.length;
     render();
   });
 
@@ -1128,8 +1175,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     document.querySelectorAll('#pose button').forEach(b => b.setAttribute('aria-pressed', String(state.mode !== 'anim' && b.dataset.v === state.pose)));
     document.querySelectorAll('#fond button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === state.fond)));
     document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-pressed', String(state.mode === 'anim')));
-    const monte = !!montureOf(state.monture);   // l'animation n'est pas encore faite sur une dragodinde
-    for (const el of [$('#mode button'), $('#pnganim'), $('#gif')]) { el.disabled = monte; el.title = monte ? 'Pas encore sur une monture' : ''; }
+    const nv = viewsOf().length;                // 8 vues sur une dragodinde (la course de profil en plus)
+    $('#pnganim .sub').textContent = `Les ${nv} vues sur une planche`; $('#gif .sub').textContent = `Les ${nv} vues qui bougent, en boucle`;
     $('#stagebox').dataset.fond = state.fond;
     const anim = state.mode === 'anim', sb = $('#stagebox');
     if (anim) { sb.tabIndex = 0; sb.setAttribute('role', 'button'); sb.setAttribute('aria-label', 'Vue suivante'); }
@@ -1154,7 +1201,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       Object.assign(state, {
         classe: +s.classe, sexe: s.sexe ? 1 : 0, colors: cleanColors(s.colors), acc: cleanAccs(s.acc),
         pose: 'FRSLB'.includes(s.pose) && s.pose ? s.pose : state.pose, miroir: !!s.miroir,
-        mode: s.mode === 'anim' ? 'anim' : 'fixe', vue: Number.isInteger(s.vue) && s.vue >= 0 && s.vue < 7 ? s.vue : 0,
+        mode: s.mode === 'anim' ? 'anim' : 'fixe', vue: Number.isInteger(s.vue) && s.vue >= 0 && s.vue < 8 ? s.vue : 0,
         zoom: Number.isInteger(s.zoom) && s.zoom >= 2 && s.zoom <= 16 ? s.zoom : state.zoom,
         fond: ['damier', 'clair', 'sombre', 'herbe'].includes(s.fond) ? s.fond : state.fond, monture: cleanMonture(s.monture) });
     } catch (e) {}
@@ -1997,7 +2044,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   const teamCards = () => teamMembers.map(m => ({ titre: m.nom || clsName(m.classe, m.sexe), sous: m.nom ? clsName(m.classe, m.sexe) : '',
                                                    classe: m.classe, sexe: m.sexe, d: m.d, acc: m.acc || teamModel.acc }));
-  // les 7 vues du jeu : les 3 poses fixes sur une ligne, puis la marche, la course et l'anim 2 à 4 instants
+  // les 7 vues du jeu (8 sur une dragodinde) : les 3 poses fixes sur une ligne, puis la marche, la course et l'anim 2 à 4 instants
   // (0 ; 0,2 ; 0,4 ; 0,6 s, repères au-dessus des colonnes)
   async function captureAnim(zoom, instants) {
     const holder = document.createElement('div');
@@ -2006,10 +2053,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     try {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       holder.appendChild(svg);
-      const keys = Object.values(state.acc).filter(Boolean).map(a => a.cle);
-      const [lib] = await Promise.all([loadAnim(gfx()), ...keys.map(loadAccAnim)]);
-      const P = Object.assign(Object.create(player), { svg, tickN: 0, raf: 0, root: null, depth: 0, again: false, lastAnim: undefined });
-      P.prepare(lib, keys);
+      const P = Object.assign(Object.create(player), { svg, tickN: 0, raf: 0, root: null, depth: 0, again: false, lastAnim: undefined, hook: null });
+      P.prepare(await animLibs());
       frame(svg, BIG, zoom);
       const shoot = async (view, ats) => {
         P.start(view);
@@ -2020,9 +2065,10 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
         return out;
       };
       const statics = [];
-      for (const v of VIEWS.slice(0, 3)) statics.push((await shoot(v, [0]))[0]);
+      const V = viewsOf();
+      for (const v of V.slice(0, 3)) statics.push((await shoot(v, [0]))[0]);
       const rows = [];
-      for (const v of VIEWS.slice(3)) rows.push(await shoot(v, instants));
+      for (const v of V.slice(3)) rows.push(await shoot(v, instants));
       return { statics, rows };
     } finally { holder.remove(); }
   }
@@ -2037,10 +2083,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     try {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       holder.appendChild(svg);
-      const keys = Object.values(state.acc).filter(Boolean).map(a => a.cle);
-      const [lib] = await Promise.all([loadAnim(gfx()), ...keys.map(loadAccAnim)]);
-      const P = Object.assign(Object.create(player), { svg, tickN: 0, raf: 0, root: null, depth: 0, again: false, lastAnim: undefined });
-      P.prepare(lib, keys);
+      const P = Object.assign(Object.create(player), { svg, tickN: 0, raf: 0, root: null, depth: 0, again: false, lastAnim: undefined, hook: null });
+      P.prepare(await animLibs());
       frame(svg, BIG, zoom);
       const snap = () => { P.paint(); return toImage(svgString(svg)); };
       // ce qui boucle : l'image principale, ou, quand elle n'a qu'une image (marche, course), le clip animé qu'elle porte
@@ -2049,7 +2093,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
         let best = null; for (const k of root.kids.values()) if (k.inst && k.inst.n > 1 && (!best || k.inst.n > best.n)) best = k.inst;
         return best || root;
       };
-      for (const [vi, view] of VIEWS.entries()) {
+      const V = viewsOf();
+      for (const [vi, view] of V.entries()) {
         P.start(view);
         if (view[0] === 'static') shots.push({ img: await snap(), delay: 80 });
         else {
@@ -2065,7 +2110,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
           }
         }
         P.lastAnim = view[0];
-        onStep(vi + 1, VIEWS.length);
+        onStep(vi + 1, V.length);
       }
     } finally { holder.remove(); }
     // cadre commun : l'encre de toutes les images, plus une marge
@@ -2080,7 +2125,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       ctx.drawImage(sh.img, x0, y0, W, H, 0, 0, W, H);
       return { rgba: ctx.getImageData(0, 0, W, H).data, delay: sh.delay };
     });
-    onStep(VIEWS.length, VIEWS.length, true); await new Promise(r => setTimeout(r, 30));   // « encodage » s'affiche
+    onStep(viewsOf().length, viewsOf().length, true); await new Promise(r => setTimeout(r, 30));   // « encodage » s'affiche
     return new Blob([gifEncode(W, H, frames)], { type: 'image/gif' });
   }
   // encodeur GIF89a, sans dépendance : pour chaque image seulement le rectangle qui a changé (les images identiques
@@ -2183,7 +2228,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     statics.forEach((im, i) => {
       const left = Math.floor(sx0) + i * cw;     // case posée sur un pixel entier, le reste passe dans la découpe
       ctx.drawImage(im, cropX(sInk[i], sx0 - Math.floor(sx0) + (cw - 1) / 2, sideOf(i, 3)), sTop, cw, sH, left, y, cw, sH);
-      lxCaption(ctx, sx0 + i * cw + cw / 2, y + sH + 30 * u, String(i + 1).padStart(2, '0'), LX_ROT[VIEWS[i][1]], u);
+      lxCaption(ctx, sx0 + i * cw + cw / 2, y + sH + 30 * u, String(i + 1).padStart(2, '0'), LX_ROT[viewsOf()[i][1]], u);
     });
     y += sH + capH;
     // « En mouvement » : titre de section, puis les instants au-dessus des colonnes
@@ -2193,7 +2238,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
                                    `400 ${Math.round(12 * u)}px ${LX.sans}`, LX.muted, 'center', 3 * u));
     y += secH;
     rows.forEach((row, r) => {
-      const v = VIEWS[3 + r], [what, dir] = v[2].split(', '), cy = y + ch / 2;
+      const v = viewsOf()[3 + r], [what, dir] = v[2].split(', '), cy = y + ch / 2;
       if (r) lxRule(ctx, m, m + contentW, y, u);
       txt(ctx, String(4 + r).padStart(2, '0'), m, cy - 30 * u, `400 ${Math.round(11 * u)}px ${LX.sans}`, LX.muted, 'left', 3.5 * u);
       txt(ctx, what, m, cy + 8 * u, `500 ${Math.round(28 * u)}px ${LX.sans}`, LX.ink, 'left', -0.3 * u);
