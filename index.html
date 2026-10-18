@@ -619,13 +619,16 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   const cleanAccs = (a) => Object.fromEntries([1, 2, 3, 4].map(n => [n, cleanAcc(a && typeof a === 'object' ? a[n] : null, n)]));
   const joinEt = (l) => l.length > 1 ? l.slice(0, -1).join(', ') + ' et ' + l[l.length - 1] : l.join('');
   // les dragodindes : 75 modèles (data/montures.js). La Caméléone n'en est pas un : c'est un effet qu'une dragodinde peut
-  // avoir, quel que soit son modèle ; elle prend alors les couleurs de son cavalier (le serveur envoie « modèle,c1,c2,c3 »,
-  // relevé sur 214 joueurs des captures DofusSuivi : toujours couleur II, III, III du perso)
+  // avoir ; elle prend alors les couleurs de son cavalier (le serveur envoie « modèle,c1,c2,c3 » : 214 caméléones dans les
+  // captures DofusSuivi, toujours couleur II, III, III du perso), sur les Dragodindes de toutes couleurs ; jamais sur le
+  // Paladin, le Tabi, le Karnage, le Bouftea Maur (125 joueurs montés), et la Squelette n'y apparaît pas : pas de Caméléone
+  // pour eux. La Dragodinde en armure non plus, à sa demande (les captures en montrent 8 sur 45 aux couleurs du cavalier)
   const MONTURES = window.SKIN_MONTURES || [], MONTURE_BY_ID = Object.fromEntries(MONTURES.map(m => [m.id, m]));
+  const SANS_CAMELEONE = new Set([75, 88, 89, 90, 91, 92]);
   function cleanMonture(v) {                    // { id, came } vérifié ; « cameleone » et un simple n° : les formes d'avant
     if (v === 'cameleone') return { id: 20, came: true };          // Dragodinde Amande : toutes les Dragodindes caméléones se ressemblent
     if (Number.isInteger(v)) v = { id: v, came: false };
-    return v && typeof v === 'object' && Number.isInteger(v.id) && Object.hasOwn(MONTURE_BY_ID, v.id) ? { id: v.id, came: !!v.came } : null;
+    return v && typeof v === 'object' && Number.isInteger(v.id) && Object.hasOwn(MONTURE_BY_ID, v.id) ? { id: v.id, came: !!v.came && !SANS_CAMELEONE.has(v.id) } : null;
   }
   const montureOf = (v) => { const c = cleanMonture(v); return c ? { ...MONTURE_BY_ID[c.id], came: c.came } : null; };
   const sameMonture = (a, b) => { const x = cleanMonture(a), y = cleanMonture(b); return !x && !y || !!x && !!y && x.id === y.id && x.came === y.came; };
@@ -715,7 +718,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     // applyAccessory : attachMovie("type_gfx", "clip", 10), gotoAndStop(étiquette + niveau de l'objet vivant) ; inconnue -> image 1
     const posed = [];
     svg.querySelectorAll('[data-acc]').forEach(el => {
-      if (mo && el.dataset.acc === '3') return;  // le familier ne monte pas (voir hidesPet)
+      if (mo && el.dataset.acc === '3') return;  // le familier ne monte pas : 1 597 joueurs montés dans les captures, aucun familier
       const want = L.acc[el.dataset.acc];
       const a = want && SKIN.acc[want.cle];
       if (!a) return;
@@ -1161,7 +1164,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   function fillMontures(q) {
     const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const cur = pickerFor ? teamMontureOf(pickerFor.i) : state.monture, L = pickerLook();
-    const list = MONTURES.map(m => ({ ...m, came: pickerCame })).filter(m => !q || norm(m.nom).includes(q));
+    const list = MONTURES.filter(m => !pickerCame || !SANS_CAMELEONE.has(m.id)).map(m => ({ ...m, came: pickerCame })).filter(m => !q || norm(m.nom).includes(q));
     const grid = $('#pickerGrid'), top = grid.scrollTop;
     $('#pickerCame').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === '1') === pickerCame)));
     $('#pickerCount').textContent = `${list.length} monture${list.length > 1 ? 's' : ''}`;
