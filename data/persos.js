@@ -1,0 +1,1 @@
+window.SKIN_PERSOS = [];
