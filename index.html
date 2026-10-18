@@ -153,6 +153,8 @@
 
   /* équipement : 4 tuiles */
   #equip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .slot.monture { grid-column: 1 / -1; }
+  .slot .thumb svg { width: 42px; height: 42px; }
   .slot { position: relative; padding: 10px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-height: 66px; }
   .slot:hover, .slot:focus-within { border-color: var(--ink); }
   .slot .pick { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; background: transparent;
@@ -198,6 +200,10 @@
   .card[aria-current="true"] { box-shadow: 0 0 0 1px var(--ink) inset; }
   .card .pic { height: 78px; display: flex; align-items: center; justify-content: center; background: var(--thumb); border-radius: 6px; }
   .card .pic img { max-width: 100%; max-height: 78px; }
+  .card .pic svg { width: 100%; height: 74px; }
+  .card .sw { display: flex; gap: 3px; padding-top: 1px; }
+  .card .sw i { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--ring); display: block; }
+  #picker [hidden] { display: none !important; }
   .card .nm { font-size: 11.5px; line-height: 14px; height: 28px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }   /* 2 lignes réservées : le numéro au même y */
   .card .id { font-size: 10.5px; line-height: 14px; color: var(--muted); }
   /* team */
@@ -564,13 +570,14 @@
 </div>
 
 <script>
-window.SKIN = { sprite: {}, acc: {}, anim: {}, accanim: {} };
+window.SKIN = { sprite: {}, acc: {}, anim: {}, accanim: {}, monture: {}, chevaucheur: {} };
 function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
 </script>
 <script src="data/meta.js"></script>
 <script src="data/persos.js"></script>
 <script src="data/catalogue.js"></script>
 <script src="data/idees.js"></script>
+<script src="data/montures.js"></script>
 <script>
 (() => {
   const M = window.SKIN_META, PERSOS = window.SKIN_PERSOS || [], CAT = window.SKIN_CATALOGUE || [];
@@ -580,7 +587,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   const ROTATIONS = ['F', 'R', 'L', 'B'];                  // l'export PNG
   const state = { classe: 9, sexe: 0, pose: 'R', miroir: false, zoom: 10, fond: 'damier', mode: 'fixe', vue: 0, 
                   acc: { 1: null, 2: { cle: '17_317', niveau: null }, 3: null, 4: null },   // emplacement -> { cle, niveau }
-                  colors: { 1: null, 2: null, 3: null } };     // null = « défaut » (-1 côté jeu)
+                  colors: { 1: null, 2: null, 3: null },       // null = « défaut » (-1 côté jeu)
+                  monture: null };                             // null, « cameleone » ou le n° d'un modèle (langue « rides »)
   const $ = (s) => document.querySelector(s);
   const hex = (n) => '#' + n.toString(16).padStart(6, '0');
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -599,6 +607,13 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   const cleanColors = (c) => Object.fromEntries([1, 2, 3].map(n => [n, cleanColor(c && typeof c === 'object' ? c[n] : null)]));
   const cleanAccs = (a) => Object.fromEntries([1, 2, 3, 4].map(n => [n, cleanAcc(a && typeof a === 'object' ? a[n] : null, n)]));
   const joinEt = (l) => l.length > 1 ? l.slice(0, -1).join(', ') + ' et ' + l[l.length - 1] : l.join('');
+  // les dragodindes : 75 modèles (data/montures.js) ; la Caméléone n'en est pas un, c'est une capacité : la dragodinde
+  // prend les couleurs de son cavalier (dessin de la Dragodinde, 7002)
+  const MONTURES = window.SKIN_MONTURES || [], MONTURE_BY_ID = Object.fromEntries(MONTURES.map(m => [m.id, m]));
+  const CAMELEONE = { id: 'cameleone', nom: 'Caméléone', gfx: 7002 };
+  const montureOf = (v) => v === 'cameleone' ? CAMELEONE : Number.isInteger(v) && Object.hasOwn(MONTURE_BY_ID, v) ? MONTURE_BY_ID[v] : null;
+  const cleanMonture = (v) => montureOf(v) ? v : null;
+  const montureName = (m) => m.id === 'cameleone' ? 'Dragodinde Caméléone' : m.nom;
   const itemName = (x) => x.noms.length ? x.noms[0] + (x.noms.length > 1 ? ` (+${x.noms.length - 1})` : '') : `Sans nom (gfx ${x.gfx})`;
 
   // ---------- chargement à la demande (balises script : marche en file://)
@@ -616,6 +631,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   const loadSprite = (g) => load('sprite', String(g), `data/sprite_${g}.js`);
   const loadAcc = (k) => load('acc', k, `data/acc/${k}.js`);
+  const loadMonture = (g) => load('monture', String(g), `data/monture/${g}.js`);
+  const loadChevaucheur = (g) => load('chevaucheur', String(g), `data/chevaucheur/${g}.js`);
 
   // ---------- filtres : la façon du client (GAC.applyColor -> Color.setTransform)
   // setTransform({ra:0, rb:R, ga:0, gb:G, ba:0, bb:B, aa:100, ab:0}) : la couleur devient (R,G,B), l'alpha reste.
@@ -632,8 +649,17 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   const accColor = (n, L = state) => L.colors[n] != null ? L.colors[n] : classDefault(n, L);
   // Objet Polykrome : partie -> couleur n selon _oMapPolykrome[gfx], avec le même repli.
   const partColor = (part, L = state) => accColor(M.polykrome[gfx(L)][part], L);
+  // Dragodinde : GAC.applyColor(clip, n, true) lit mount.color<n>. Caméléone : 1 = couleur II du cavalier, 2 et 3 = sa
+  // couleur III (loader.swf @4827179). Une couleur -1 prend celle de la classe du cavalier : 1 -> c2, 2 et 3 -> c3
+  // (hasFallbackColor : sprites 7000 à 7027, @5285845).
+  function montureColors(m, L = state) {
+    const c = m.id === 'cameleone' ? [L.colors[2], L.colors[3], L.colors[3]] : m.couleurs;
+    return c.map((x, i) => x != null ? x : classDefault(i ? 3 : 2, L));
+  }
   function filtersMarkup(L = state) {
-    return [1, 2, 3].map(n => flat('slot' + n, L.colors[n])).join('') +
+    const mo = montureOf(L.monture);
+    return (mo ? montureColors(mo, L).map((c, i) => flat('mslot' + (i + 1), c)).join('') : '') +
+      [1, 2, 3].map(n => flat('slot' + n, L.colors[n])).join('') +
       [1, 2, 3].map(n => flat('aslot' + n, accColor(n, L))).join('') +
       ['bottom', 'body', 'head'].map(p => flat('part-' + p, partColor(p, L))).join('') +
       '<filter id="opaque" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 255 0"/></filter>';
@@ -661,10 +687,15 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   async function draw(svg, pose, miroir, zoom, L = state) {
     const g = gfx(L);
     const keys = Object.values(L.acc).filter(Boolean).map(a => a.cle);
-    const [spr, ...accs] = await Promise.all([loadSprite(g), ...keys.map(loadAcc)]);
+    const mo = montureOf(L.monture);
+    const [spr, mt, ...accs] = await Promise.all([mo ? loadChevaucheur(g) : loadSprite(g), mo && loadMonture(mo.gfx), ...keys.map(loadAcc)]);
     const flip = miroir ? ' transform="scale(-1,1)"' : '';
-    svg.innerHTML = `<defs class="filters">${filtersMarkup(L)}</defs><defs>${spr.defs}${accs.map(a => a.defs).join('')}</defs>` +
-                    `<g class="root"${flip}>${spr.poses[pose]}</g>`;
+    // sur une dragodinde (loader.swf @7388369) : son calque arrière, le perso « chevaucheur » posé sur le clip qui appelle
+    // GAC.registerChevauchor, puis son calque avant
+    const P = mt && mt.poses[pose];
+    const body = P ? `<g>${P.back}</g><g transform="matrix(${P.place.join(',')})">${spr.poses[pose]}</g><g>${P.front}</g>` : spr.poses[pose];
+    svg.innerHTML = `<defs class="filters">${filtersMarkup(L)}</defs><defs>${spr.defs}${mt ? mt.defs : ''}${accs.map(a => a.defs).join('')}</defs>` +
+                    `<g class="root"${flip}>${body}</g>`;
     // applyAccessory : attachMovie("type_gfx", "clip", 10), gotoAndStop(étiquette + niveau de l'objet vivant) ; inconnue -> image 1
     const posed = [];
     svg.querySelectorAll('[data-acc]').forEach(el => {
@@ -689,6 +720,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     return { x0: box.x0, x1: box.x1, y0: bb.y, y1: bb.y + bb.height, posed };
   }
   const FRAME = { x0: -27, y0: -52, x1: 27, y1: 10 };    // cadre fixe (px du jeu) : la taille ne saute pas d'une pose à l'autre
+  const FRAME_MONTE = { x0: -36, y0: -84, x1: 36, y1: 12 };     // le même, sur une dragodinde
   const union = (a, b) => ({ x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) });
   function frame(svg, b, zoom) {
     const x0 = b.x0 - 1, y0 = b.y0 - 1, w = b.x1 - b.x0 + 2, h = b.y1 - b.y0 + 2;
@@ -701,6 +733,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   async function render() {
     const id = ++renderId;
     setStatus('Chargement…');
+    const mo = montureOf(state.monture);
+    if (mo) state.mode = 'fixe';                // l'animation : pas encore sur une dragodinde
     syncUI();
     if (state.mode === 'anim') return player.show(id);
     player.stop();
@@ -708,9 +742,9 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     try { r = await draw($('#stage'), state.pose, state.miroir, state.zoom); }
     catch (e) { if (id === renderId) setStatus(e.message); return; }
     if (id !== renderId) return;
-    frame($('#stage'), union(FRAME, r), state.zoom);
+    frame($('#stage'), union(mo ? FRAME_MONTE : FRAME, r), state.zoom);
     const cls = M.classes[state.classe].nom + (state.sexe ? ' femelle' : ' mâle');
-    setStatus(`${cls} · ${POSE_NAMES[state.pose]}${state.miroir ? ' · miroir' : ''}`);
+    setStatus(`${cls} · ${POSE_NAMES[state.pose]}${state.miroir ? ' · miroir' : ''}${mo ? ' · ' + montureName(mo) : ''}`);
   }
   function refreshFilters() {           // changer une couleur ne refait que les filtres
     const f = $('#stage .filters');
@@ -964,23 +998,52 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       return `<div class="slot" data-slot="${n}">
         <button class="pick" data-pick="${n}" aria-label="Changer : ${what}, ${nm}"${x ? ` title="${nm}"` : ''}><span class="thumb">${x && x.vignette ? `<img src="svg/vignettes/${x.cle}.svg" alt="">` : ''}</span>
           <span class="txt"><span class="what">${what}</span><span class="name">${x ? nm : '—'}</span></span></button>${lvl}
-        ${x ? `<button data-off="${n}" aria-label="Enlever : ${nm}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>` : ''}</div>`;
-    }).join('');
+        ${x ? `<button data-off="${n}" aria-label="Enlever : ${nm}">${CROSS}</button>` : ''}</div>`;
+    }).join('') + montureTile();
     $('#equip').querySelectorAll('[data-pick]').forEach(b => b.onclick = () => openPicker(+b.dataset.pick));
     $('#equip').querySelectorAll('[data-off]').forEach(b => b.onclick = () => {
-      const n = b.dataset.off; state.acc[n] = null; touched(); equipUI(); render();
+      const n = b.dataset.off;
+      if (n === '5') state.monture = null; else { state.acc[n] = null; touched(); }      // la monture ne change pas le skin
+      equipUI(); render();
       const t = document.querySelector(`[data-pick="${n}"]`); if (t) t.focus();   // le focus reste sur la tuile
     });
     $('#equip').querySelectorAll('[data-lvl]').forEach(s => s.onchange = () => { state.acc[s.dataset.lvl].niveau = +s.value; touched(); render(); });
   }
+  const CROSS = '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  // la monture : une tuile de plus, sur toute la largeur ; son aperçu se dessine quand la dragodinde est chargée
+  function montureTile() {
+    const mo = montureOf(state.monture), nm = mo ? esc(mo.nom) : 'aucune';
+    if (mo && !SKIN.monture[mo.gfx]) loadMonture(mo.gfx).then(() => { if (montureOf(state.monture) === mo) equipUI(); }).catch(() => {});
+    return `<div class="slot monture" data-slot="5">
+        <button class="pick" data-pick="5" aria-label="Changer : Monture, ${nm}"${mo ? ` title="${esc(montureName(mo))}"` : ''}><span class="thumb">${mo ? montureThumb(mo) : ''}</span>
+          <span class="txt"><span class="what">Monture</span><span class="name">${mo ? nm : '—'}</span></span></button>
+        ${mo ? `<button data-off="5" aria-label="Enlever : ${nm}">${CROSS}</button>` : ''}</div>`;
+  }
+  // aperçu d'une dragodinde seule, à ses couleurs, de ¾ face : un petit <svg> qui reprend ses formes, posées une seule
+  // fois dans la page ; chaque aperçu a ses propres filtres
+  let thumbN = 0;
+  function montureThumb(mo, L = state) {
+    const mt = SKIN.monture[mo.gfx]; if (!mt) return '';
+    if (!document.getElementById('mdefs-' + mo.gfx))
+      document.body.insertAdjacentHTML('beforeend', `<svg id="mdefs-${mo.gfx}" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${mt.defs}</defs></svg>`);
+    const id = 'mt' + (++thumbN), P = mt.poses.R, b = P.box;
+    const fix = (str) => str.replace(/url\(#mslot(\d)\)/g, `url(#${id}-$1)`);
+    return `<svg viewBox="${b[0] - 1} ${b[1] - 1} ${b[2] - b[0] + 2} ${b[3] - b[1] + 2}" aria-hidden="true"><defs>${montureColors(mo, L).map((c, i) => flat(`${id}-${i + 1}`, c)).join('')}</defs>${fix(P.back)}${fix(P.front)}</svg>`;
+  }
   const touched = () => { $('#perso').value = ''; };   // le skin n'est plus celui du perso choisi
   let pickerSlot = null, pickerFor = null;      // pickerFor : null = l'éditeur ; { i } = le perso i + 2 de la team
   const pickerCurrent = () => { const a = pickerFor ? teamAccOf(pickerFor.i)[pickerSlot] : state.acc[pickerSlot]; return a && a.cle; };
+  const MONTURE_SLOT = 5;                       // le choix d'objet sert aussi pour la monture
   const modal = (on) => { $('.wrap').inert = on; document.body.style.overflow = on ? 'hidden' : ''; };   // fond inerte, sans défilement
   function openPicker(slot, target = null) {
     pickerSlot = slot; pickerFor = target; pickerFilter = '';       // chaque ouverture repart de « Tous »
-    $('#pickerTitle').textContent = target ? `${SLOT_NAMES[slot]} · Perso ${target.i + 2}` : SLOT_NAMES[slot];
-    $('#pickerNone').textContent = target ? 'Comme le modèle' : 'Rien';
+    const mnt = slot === MONTURE_SLOT;
+    $('#pickerTitle').textContent = mnt ? 'Monture' : target ? `${SLOT_NAMES[slot]} · Perso ${target.i + 2}` : SLOT_NAMES[slot];
+    $('#pickerNone').textContent = mnt ? 'Aucune' : target ? 'Comme le modèle' : 'Rien';
+    $('#pickerFilter').hidden = mnt;
+    $('#pickerSearch').placeholder = mnt ? 'Nom' : 'Nom ou numéro';
+    if (mnt) Promise.all([...new Set(MONTURES.map(m => m.gfx))].map(loadMonture))     // les 7 dessins, puis leurs aperçus
+      .then(() => { if (pickerSlot === MONTURE_SLOT) fillPicker(); }).catch(() => {});
     $('#pickerAucun').hidden = !target;
     $('#pickerSearch').value = '';
     $('#picker').classList.add('open');
@@ -1005,6 +1068,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     : x.couleurs === 'perso' ? (x.slots.length > 1 ? `couleurs ${joinEt(x.slots)}` : `couleur ${x.slots[0]}`) : '';
   function fillPicker() {
     const q = $('#pickerSearch').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    if (pickerSlot === MONTURE_SLOT) return fillMontures(q);
     const cur = pickerCurrent();
     const ofSlot = CAT.filter(x => x.emplacement === pickerSlot);
     const list = ofSlot.filter(x => !pickerFilter || x.couleurs === pickerFilter)
@@ -1019,9 +1083,24 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       <div class="pic">${x.vignette ? `<img loading="lazy" src="svg/vignettes/${x.cle}.svg" alt="">` : ''}</div>
       <div class="nm">${esc(itemName(x))}</div><div class="id">${[x.cle, x.niveaux ? 'objet vivant' : '', colorTag(x)].filter(Boolean).join(' · ')}</div></button>`).join('');
   }
+  // la Caméléone d'abord, puis les modèles dans l'ordre du jeu ; sous chacun ses trois couleurs (dessin de la Dragodinde)
+  function fillMontures(q) {
+    const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const list = [CAMELEONE, ...MONTURES].filter(m => !q || norm(montureName(m)).includes(q));
+    const grid = $('#pickerGrid'), top = grid.scrollTop;
+    $('#pickerCount').textContent = `${list.length} monture${list.length > 1 ? 's' : ''}`;
+    grid.innerHTML = list.map(m => `<button class="card" data-mid="${m.id}" aria-current="${m.id === state.monture}" title="${esc(montureName(m))}">
+      <div class="pic">${montureThumb(m)}</div><div class="nm">${esc(m.nom)}</div>
+      <div class="id">${m.id === 'cameleone' ? 'tes couleurs II et III' : m.gfx === 7002 ? `<span class="sw">${montureColors(m).map(c => `<i style="background:${hex(c)}"></i>`).join('')}</span>` : ''}</div></button>`).join('');
+    grid.scrollTop = top;                       // les aperçus arrivent après : la liste ne saute pas
+  }
   $('#pickerFilter').querySelectorAll('button').forEach(b => b.onclick = () => { pickerFilter = b.dataset.v; fillPicker(); });
   $('#pickerGrid').onclick = (e) => {
     const c = e.target.closest('.card'); if (!c) return;
+    if (c.dataset.mid) {                        // une monture
+      state.monture = c.dataset.mid === 'cameleone' ? 'cameleone' : +c.dataset.mid;
+      closePicker(); equipUI(); render(); return;
+    }
     const x = BY_KEY[c.dataset.key], a = { cle: x.cle, niveau: x.niveaux ? x.niveaux[0] : null };
     if (pickerFor) {                            // le même objet vivant que le modèle : au même niveau
       const i = pickerFor.i, sl = pickerSlot, md = teamModel.acc[sl];
@@ -1035,7 +1114,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#pickerClose').onclick = closePicker;
   $('#pickerNone').onclick = () => {
     if (pickerFor) { const i = pickerFor.i, sl = pickerSlot; closePicker(); return setTeamAcc(i, sl, undefined); }   // comme le modèle
-    state.acc[pickerSlot] = null; touched(); closePicker(); equipUI(); render();
+    if (pickerSlot === MONTURE_SLOT) state.monture = null; else { state.acc[pickerSlot] = null; touched(); }
+    closePicker(); equipUI(); render();
   };
   $('#pickerAucun').onclick = () => { if (pickerFor) { const i = pickerFor.i, sl = pickerSlot; closePicker(); setTeamAcc(i, sl, null); } };
   $('#picker').onclick = (e) => { if (e.target.id === 'picker') closePicker(); };
@@ -1048,6 +1128,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     document.querySelectorAll('#pose button').forEach(b => b.setAttribute('aria-pressed', String(state.mode !== 'anim' && b.dataset.v === state.pose)));
     document.querySelectorAll('#fond button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === state.fond)));
     document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-pressed', String(state.mode === 'anim')));
+    const monte = !!montureOf(state.monture);   // l'animation n'est pas encore faite sur une dragodinde
+    for (const el of [$('#mode button'), $('#pnganim'), $('#gif')]) { el.disabled = monte; el.title = monte ? 'Pas encore sur une monture' : ''; }
     $('#stagebox').dataset.fond = state.fond;
     const anim = state.mode === 'anim', sb = $('#stagebox');
     if (anim) { sb.tabIndex = 0; sb.setAttribute('role', 'button'); sb.setAttribute('aria-label', 'Vue suivante'); }
@@ -1074,7 +1156,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
         pose: 'FRSLB'.includes(s.pose) && s.pose ? s.pose : state.pose, miroir: !!s.miroir,
         mode: s.mode === 'anim' ? 'anim' : 'fixe', vue: Number.isInteger(s.vue) && s.vue >= 0 && s.vue < 7 ? s.vue : 0,
         zoom: Number.isInteger(s.zoom) && s.zoom >= 2 && s.zoom <= 16 ? s.zoom : state.zoom,
-        fond: ['damier', 'clair', 'sombre', 'herbe'].includes(s.fond) ? s.fond : state.fond });
+        fond: ['damier', 'clair', 'sombre', 'herbe'].includes(s.fond) ? s.fond : state.fond, monture: cleanMonture(s.monture) });
     } catch (e) {}
   }
 
@@ -1186,7 +1268,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   $('#mode button').onclick = () => { state.mode = state.mode === 'anim' ? 'fixe' : 'anim'; state.vue = 0; render(); };
   $('#zoom').oninput = e => { state.zoom = +e.target.value; render(); };
   $('#reset').onclick = () => { state.colors = { 1: null, 2: null, 3: null }; touched(); syncUI(); refreshFilters(); };
-  $('#nothing').onclick = () => { state.acc = { 1: null, 2: null, 3: null, 4: null }; touched(); equipUI(); render(); };
+  $('#nothing').onclick = () => { state.acc = { 1: null, 2: null, 3: null, 4: null }; state.monture = null; touched(); equipUI(); render(); };
   function capture() {                          // « Comme ta capture » (menu Idées)
     state.classe = 9; state.sexe = 0; state.pose = 'F'; state.miroir = false; state.mode = 'fixe';
     state.colors = { 1: 0xf5e3ff, 2: 0x332d40, 3: 0xf5e3ff };
@@ -1539,7 +1621,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     return t.filter(k => k && typeof k === 'object' && isClasse(k.classe) && typeof k.id === 'string' && /^[\w-]{1,40}$/.test(k.id))
       .map(k => ({ id: k.id, nom: (typeof k.nom === 'string' && k.nom.trim() ? k.nom : 'Skin').slice(0, 40),
                    date: typeof k.date === 'string' && !isNaN(Date.parse(k.date)) ? k.date : '',
-                   classe: +k.classe, sexe: k.sexe ? 1 : 0, colors: cleanColors(k.colors), acc: cleanAccs(k.acc) }));
+                   classe: +k.classe, sexe: k.sexe ? 1 : 0, colors: cleanColors(k.colors), acc: cleanAccs(k.acc),
+                   monture: k.monture === undefined ? undefined : cleanMonture(k.monture) }));
   }
   const saveSkins = (list) => store.set(SKINS_KEY, JSON.stringify(list));
   const lookOfSkin = (k) => ({ classe: k.classe, sexe: k.sexe, colors: { ...k.colors }, acc: JSON.parse(JSON.stringify(k.acc)) });
@@ -1559,6 +1642,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   }
   function openSkin(k) {
     Object.assign(state, lookOfSkin(k), { mode: 'fixe' });
+    if (k.monture !== undefined) state.monture = k.monture;
     equipUI(); render(); $('#perso').value = 's:' + k.id;
   }
   function drawSkins() {
@@ -1571,7 +1655,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
         <div class="nm">${esc(k.nom)}</div>
         <div class="cl">${[clsName(L.classe, L.sexe), dateFr(k.date)].filter(Boolean).join(' · ')}</div>
         <div class="tcols">${[1, 2, 3].map(n => chipHtml(m, n)).join('')}</div>
-        <div class="own">${itemsLine(L.acc) || 'rien de porté'}</div>
+        <div class="own">${[itemsLine(L.acc), montureOf(k.monture) ? esc(montureName(montureOf(k.monture))) : ''].filter(Boolean).join(' · ') || 'rien de porté'}</div>
         <div class="acts"><button class="btn small" data-act="open" aria-label="Ouvrir ${esc(k.nom)}">Ouvrir</button><button class="btn small" data-act="cmp" aria-label="Comparer ${esc(k.nom)}">Comparer</button><button class="btn small" data-act="del" aria-label="Supprimer ${esc(k.nom)}">Supprimer</button></div>
       </div>`;
     }).join('');
@@ -1596,7 +1680,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     let d = 1; while (used.has(`Skin ${d}`)) d++;                     // le premier « Skin n » libre
     const nom = ($('#skinName').value.trim() || `Skin ${d}`).slice(0, 40);
     const k = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nom, date: new Date().toISOString(),
-                classe: state.classe, sexe: state.sexe, colors: { ...state.colors }, acc: JSON.parse(JSON.stringify(state.acc)) };
+                classe: state.classe, sexe: state.sexe, colors: { ...state.colors }, acc: JSON.parse(JSON.stringify(state.acc)), monture: state.monture };
     if (!saveSkins([k, ...list])) {             // stockage plein ou bloqué : on le dit, le nom tapé reste
       $('#skinsEmpty').textContent = 'Enregistrement impossible : le stockage du navigateur est plein ou bloqué.'; return;
     }
@@ -1793,7 +1877,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       txt(ctx, `COULEUR ${['I', 'II', 'III'][i]}` + (state.colors[n] == null ? '  ·  DÉFAUT' : ''), cx, cy + 48 * u, `400 ${Math.round(11 * u)}px ${LX.sans}`, LX.muted, 'center', 3.5 * u);
       txt(ctx, hex(c).toUpperCase(), cx, cy + 76 * u, `500 ${Math.round(21 * u)}px ${LX.sans}`, LX.ink, 'center', 2 * u);
     });
-    const worn = Object.values(state.acc).filter(Boolean).map(a => BY_KEY[a.cle]).filter(Boolean).map(itemName);
+    const mo = montureOf(state.monture);
+    const worn = Object.values(state.acc).filter(Boolean).map(a => BY_KEY[a.cle]).filter(Boolean).map(itemName).concat(mo ? [montureName(mo)] : []);
     if (!worn.length) return 128 * u;
     // centrée sur sa longueur : caler le point du milieu sur l'axe faisait partir toute la ligne du côté des noms longs
     txt(ctx, worn.join('   ·   '), left + width / 2, top + 180 * u, `400 ${Math.round(18 * u)}px ${LX.sans}`, LX.muted, 'center');
@@ -1825,7 +1910,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     const top = Math.min(...ink.map(b => b.y0)) - PV, H = Math.max(...ink.map(b => b.y1)) + PV - top;
     const gridW = W * imgs.length, u = gridW / 1700, m = Math.round(80 * u), my = Math.round(48 * u);
     const below = 36 * u;                             // des pieds au filet du pied
-    const footH = Object.values(state.acc).some(Boolean) ? 180 * u : 128 * u;     // ce que lxFooter renverra
+    const footH = Object.values(state.acc).some(Boolean) || montureOf(state.monture) ? 180 * u : 128 * u;     // ce que lxFooter renverra
     const cv = document.createElement('canvas');
     cv.width = gridW + 2 * m;
     cv.height = Math.round(my + H + below + footH + my + PV);
@@ -2086,7 +2171,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     const gridW = cw * cols, u = gridW / 1400, m = Math.round(80 * u), my = Math.round(48 * u), labelW = Math.round(220 * u);
     const contentW = labelW + gridW, capH = Math.round(76 * u), secH = Math.round(100 * u);
     const width = m + contentW + m;
-    const footH = Object.values(state.acc).some(Boolean) ? 180 * u : 128 * u;     // ce que lxFooter renverra
+    const footH = Object.values(state.acc).some(Boolean) || montureOf(state.monture) ? 180 * u : 128 * u;     // ce que lxFooter renverra
     const height = Math.round(my + sH + capH + secH + ch * rows.length + 36 * u + footH + my + MV);
     const cv = document.createElement('canvas'); cv.width = width; cv.height = height;
     const ctx = cv.getContext('2d');
@@ -2137,7 +2222,7 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
   };
   // menu Exporter : s'ouvre au clic (focus sur le premier choix), flèches haut / bas, Échap ou clic ailleurs le ferme ;
   // l'export choisi montre sa progression sur le bouton « Exporter »
-  const exportItems = () => [...$('#exportMenu').querySelectorAll('[role=menuitem]')];
+  const exportItems = () => [...$('#exportMenu').querySelectorAll('[role=menuitem]:not(:disabled)')];
   function exportMenu(open, focusBtn = false) {
     $('#exportMenu').hidden = !open; $('#exportBtn').setAttribute('aria-expanded', String(open));
     if (open) exportItems()[0].focus(); else if (focusBtn) $('#exportBtn').focus();
@@ -2182,12 +2267,12 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
     `${fileBase()}_${state.mode === 'anim' ? 'anim-vue' + (state.vue + 1) : POSE_FILE[state.pose] + (state.miroir ? '-miroir' : '')}.svg`); };
 
   // ---------- lien de partage : le skin dans l'adresse de la page
-  // index.html#c=9&s=0&k=f5e3ff,332d40,f5e3ff&a=16_41,81_57,18_31,82_106 (k : « - » = défaut ; a : emplacements 1 à 4,
-  // vide = rien, « cle~n » = objet vivant au niveau n)
+  // index.html#c=9&s=0&k=f5e3ff,332d40,f5e3ff&a=16_41,81_57,18_31,82_106&m=cameleone (k : « - » = défaut ; a : emplacements
+  // 1 à 4, vide = rien, « cle~n » = objet vivant au niveau n ; m : la monture, « cameleone » ou le n° du modèle, absente = aucune)
   function shareHash() {
     const k = [1, 2, 3].map(n => state.colors[n] != null ? hex(state.colors[n]).slice(1) : '-').join(',');
     const a = [1, 2, 3, 4].map(n => { const x = state.acc[n]; return x ? x.cle + (x.niveau != null ? '~' + x.niveau : '') : ''; }).join(',');
-    return `c=${state.classe}&s=${state.sexe}&k=${k}&a=${a}`;
+    return `c=${state.classe}&s=${state.sexe}&k=${k}&a=${a}` + (state.monture != null ? `&m=${state.monture}` : '');
   }
   function applyHash() {                        // vrai si l'adresse portait un skin valable
     const q = new URLSearchParams(location.hash.slice(1));
@@ -2204,6 +2289,8 @@ function SKIN_ADD(kind, key, data) { SKIN[kind][key] = data; }
       const [cle, lvl] = (parts[n - 1] || '').split('~');
       state.acc[n] = cleanAcc({ cle, niveau: /^\d{1,3}$/.test(lvl || '') ? +lvl : null }, n);
     }
+    const m = q.get('m') || '';
+    state.monture = cleanMonture(m === 'cameleone' ? m : /^\d{1,4}$/.test(m) ? +m : null);
     state.mode = 'fixe';
     clean();                                    // l'état reste mémorisé
     return true;
